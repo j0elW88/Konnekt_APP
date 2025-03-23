@@ -1,26 +1,25 @@
-import { onAuthStateChanged, signOut, User } from "firebase/auth";
 import React, { useEffect, useState } from "react";
 import { View, Text, Button, StyleSheet } from "react-native";
-import { auth } from "../../firebase";
 
 export default function AuthDetails() {
-  const [authUser, setAuthUser] = useState<User | null>(null);
+  const [authUser, setAuthUser] = useState<{ email: string } | null>(null);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setAuthUser(user);
-    });
+    const interval = setInterval(() => {
+      if (global.authUser) {
+        setAuthUser(global.authUser);
+      } else {
+        setAuthUser(null);
+      }
+    }, 1000);
 
-    return () => unsubscribe();
+    return () => clearInterval(interval);
   }, []);
 
-  const userSignOut = async () => {
-    try {
-      await signOut(auth);
-      console.log("User signed out");
-    } catch (error) {
-      console.error("Sign-out error:", error);
-    }
+  const userSignOut = () => {
+    global.authUser = null;
+    setAuthUser(null);
+    console.log("User signed out");
   };
 
   return (

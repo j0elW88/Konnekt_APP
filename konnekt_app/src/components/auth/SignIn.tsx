@@ -1,60 +1,47 @@
-import { signInWithEmailAndPassword } from "firebase/auth";
 import React, { useState } from "react";
-import { View, Text, TextInput, Button, StyleSheet } from "react-native";
-import { auth } from "../../firebase";
+import { View, TextInput, Button, Text, StyleSheet } from "react-native";
+
+const API_URL = "http://(PUT YOUR IP ADDRESS HERE):5000/api/auth";
 
 export default function SignIn() {
-  const [email, setEmail] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   const signIn = async () => {
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      console.log("User signed in:", userCredential.user);
-    } catch (error) {
-      console.error("Sign-in error:", error);
+      const response = await fetch(`${API_URL}/signin`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        global.authUser = data.user; // Simulate global user
+        setError(null);
+        console.log("User signed in:", data.user);
+      } else {
+        setError(data.msg);
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Something went wrong.");
     }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Log Into Your Account</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Enter Your Email"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Enter Your Password"
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
-      />
+      <TextInput placeholder="Email" value={email} onChangeText={setEmail} style={styles.input} />
+      <TextInput placeholder="Password" value={password} onChangeText={setPassword} secureTextEntry style={styles.input} />
+      {error && <Text style={styles.error}>{error}</Text>}
       <Button title="Log In" onPress={signIn} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 20,
-    alignItems: "center",
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 10,
-  },
-  input: {
-    width: "100%",
-    padding: 10,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 5,
-    marginBottom: 10,
-  },
+  container: { padding: 20 },
+  input: { borderBottomWidth: 1, marginBottom: 10 },
+  error: { color: "red", marginBottom: 10 },
 });
