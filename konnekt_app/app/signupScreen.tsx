@@ -1,6 +1,6 @@
 import { View, StyleSheet } from "react-native";
-import SignUp from "../../src/components/auth/SignUp";
-import AuthDetails from "../../src/components/auth/AuthDetails";
+import SignUp from "../src/components/auth/SignUp";
+import AuthDetails from "../src/components/auth/AuthDetails";
  
 export default function SignUpScreen() {
 

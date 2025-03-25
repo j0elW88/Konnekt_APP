@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import { Image } from 'expo-image'
 
 
-const API_URL = "http://[YOUR-IP-HERE]:5000/api/auth";
+const API_URL = "http://[place-ip-here]:5000/api/auth";
 
 export default function SignIn() {
   const router = useRouter();
@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
       backgroundColor: '#F9F9F9',
   },
   button: {
-      backgroundColor: '#4c87df', // Muted lavender for the button
+      backgroundColor: '#4c87df', 
       paddingVertical: 10,
       borderRadius: 5,
       alignItems: 'center',
