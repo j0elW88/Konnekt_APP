@@ -20,6 +20,7 @@ To Boot Konnekt with the MongoDB Local Implementation<br />
 
 <br />
 Note that Sign up and Sign In Requests are stored and hashed locally, which means that the database is not shared across the cloud *currently*, so users on one device will not be transfered to another users device when activating the project from the github implementation. <br />
+<br />
 
 
 *If for some reason your code does not boot immediately, firstly ensure your Signin and Signout IP address are correct, then ensure you are correctly booting MongoDB, then if needed you may need to run npm install in your backend folder (specifically the backend folder)* <br />
