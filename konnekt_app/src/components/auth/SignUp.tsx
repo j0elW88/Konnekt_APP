@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { View, TextInput, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { useRouter } from 'expo-router';
+import { IP_ADDRESS } from "../config/globalvariables";
 
-const API_URL = "http://[YOUR-IP-HERE]:5000/api/auth";  // change ip address before push
+const API_URL = `http://${IP_ADDRESS}:5000/api/auth`;  // change ip address in config global
 
 export default function SignUp() {
   const router = useRouter();
@@ -127,7 +128,7 @@ const styles = StyleSheet.create({
       backgroundColor: '#F9F9F9',
   },
   button: {
-      backgroundColor: '#4c87df', // Muted lavender for the button
+      backgroundColor: '#4c87df', 
       paddingVertical: 10,
       borderRadius: 5,
       alignItems: 'center',
