@@ -1,19 +1,14 @@
 import { View, StyleSheet } from "react-native";
-//import { useRouter } from "expo-router"; // Expo Router Navigation
-import SignIn from "../../src/components/auth/SignIn";
+import SignUp from "../../src/components/auth/SignUp";
 import AuthDetails from "../../src/components/auth/AuthDetails";
-
-
-
-export default function HomeScreen() {
-  //const router = useRouter();
+ 
+export default function SignUpScreen() {
 
   return (
     <View style={styles.container}>
-      <SignIn />
-      <AuthDetails />       
+      <SignUp />      
+      <AuthDetails />  
     </View>
-    //New Components Declared Above
   );
 }
 
