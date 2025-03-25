@@ -1,11 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, TextInput, Text, StyleSheet, TouchableOpacity} from "react-native";
 import { useRouter } from 'expo-router';
 import { Image } from 'expo-image'
 
 
-
-const API_URL = "http://100.64.0.125:5000/api/auth";
+const API_URL = "http://[YOUR-IP-HERE]:5000/api/auth";
 
 export default function SignIn() {
   const router = useRouter();
@@ -13,6 +12,10 @@ export default function SignIn() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setError(null); //This (should) clear screen of errors when reloading screen
+  }, []);
 
   const signIn = async () => {
     try {
@@ -44,7 +47,10 @@ export default function SignIn() {
         style={styles.input} 
         placeholder="Enter Your Email" 
         value={email} 
-        onChangeText={setEmail} 
+        onChangeText={(text) => {
+          setEmail(text);
+          setError(null); //clears error while new input being added
+        }}
         placeholderTextColor="#aaa" />
 
       <Text style={styles.label}>Password</Text>
@@ -52,7 +58,10 @@ export default function SignIn() {
         style={styles.input} 
         placeholder="Enter Your Password" 
         value={password} 
-        onChangeText={setPassword} 
+        onChangeText={(text) => {
+          setPassword(text);
+          setError(null); 
+        }}
         placeholderTextColor="#aaa" 
         secureTextEntry />
 

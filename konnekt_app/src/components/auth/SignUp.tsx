@@ -1,16 +1,34 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, TextInput, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { useRouter } from 'expo-router';
 
-const API_URL = "http://100.64.0.125:5000/api/auth";  // change ip address before push
+const API_URL = "http://[YOUR-IP-HERE]:5000/api/auth";  // change ip address before push
 
 export default function SignUp() {
+  const router = useRouter();
   console.log("signUp function called");
+
+  const isValidEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+  
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
 
+    useEffect(() => {
+      setError(null); //This clears screen of errors when reloading screen
+    }, []);
+
   const signUp = async () => {
+
+    if (!isValidEmail(email)) {
+      setError("Please enter a valid email address.");
+      return;
+    }
+    
     try {
       const response = await fetch(`${API_URL}/signup`, {
         method: "POST",
@@ -39,7 +57,10 @@ export default function SignUp() {
         style={styles.input} 
         placeholder="Enter Your Email" 
         value={email} 
-        onChangeText={setEmail} 
+        onChangeText={(text) => {
+          setEmail(text);
+          setError(null); //clears error while new input being added
+        }}
         placeholderTextColor="#aaa" />
 
       <Text style={styles.label}>Password</Text>
@@ -47,16 +68,27 @@ export default function SignUp() {
         style={styles.input} 
         placeholder="Enter Your Password" 
         value={password} 
-        onChangeText={setPassword} 
+        onChangeText={(text) => {
+          setPassword(text);
+          setError(null); //clears error while new input being added
+        }}
         placeholderTextColor="#aaa" 
         secureTextEntry />
 
-      {/* Sign In Button */}
+      {/* Sign Up Button */}
       <TouchableOpacity style={styles.button} onPress={signUp}>
         <Text style={styles.buttonText}>Sign Up</Text>
       </TouchableOpacity>
       {error && <Text style={styles.error}>{error}</Text>}
+    
+      {/*Go Back Button*/}
+      <TouchableOpacity style={styles.button} onPress={() => router.back()}>
+        <Text style={styles.newAccButtonText}>Go Back</Text>
+      </TouchableOpacity>
+    
+    
     </View>
+    
     
   );
 }
