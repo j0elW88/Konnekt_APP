@@ -12,7 +12,7 @@ Konnekt caters towards new users, provides insight into future events, provides 
 # How to Open Konnekt 
 
 To Boot Konnekt with the MongoDB Local Implementation<br />
-1) Download Local MongoDB from this link https://discord.com/channels/1334947391530340405/1334947392222531700/1353815388160262306 <br />
+1) Download Local MongoDB from this link https://www.mongodb.com/try/download/community <br />
 2) Open Signin.tsx and Signup.tsx and input your IP Address. Your IP4 Address can be found by running ipconfig in your terminal and locating the "IP4" address under Wireless and Lan connections. <br />
 3) **Open two terminals in your code editor**, (typically vscode) and ensure you correctly cd into **"cd konnekt_app/backend"** and in your other terminal **"cd konnekt_app"** <br />
 4) In backend, run the command: **"node server.js"** If connected correctly, you should recieve the message "🚀 Server running on http://localhost:5000" followed by "MongoDB connected." If this does not work, ensure your MongoDB server has been activated/Connected on the MongoDB app. <br />
