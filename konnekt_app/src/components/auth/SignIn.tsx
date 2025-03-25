@@ -2,9 +2,10 @@ import React, { useState, useEffect } from "react";
 import { View, TextInput, Text, StyleSheet, TouchableOpacity} from "react-native";
 import { useRouter } from 'expo-router';
 import { Image } from 'expo-image'
+import { IP_ADDRESS } from "../config/globalvariables";
 
 
-const API_URL = "http://[place-ip-here]:5000/api/auth";
+const API_URL = `http://${IP_ADDRESS}:5000/api/auth`; // change ip address in config global
 
 export default function SignIn() {
   const router = useRouter();
