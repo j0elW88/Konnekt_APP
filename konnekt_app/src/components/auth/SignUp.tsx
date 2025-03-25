@@ -82,7 +82,7 @@ export default function SignUp() {
       {error && <Text style={styles.error}>{error}</Text>}
     
       {/*Go Back Button*/}
-      <TouchableOpacity style={styles.button} onPress={() => router.back()}>
+      <TouchableOpacity style={styles.newAccButton} onPress={() => router.back()}>
         <Text style={styles.newAccButtonText}>Go Back</Text>
       </TouchableOpacity>
     
@@ -148,13 +148,13 @@ const styles = StyleSheet.create({
       backgroundColor: '#fff', // Muted lavender for the button
       paddingVertical: 10,
       borderRadius: 5,
-      borderColor: '#A078B6',
+      borderColor: '#4c87df',
       borderWidth: 1,
       alignItems: 'center',
       marginBottom: 8,
   },
   newAccButtonText: {
-      color: '#A078B6',
+      color: '#4c87df',
       fontSize: 16,
       fontWeight: 'bold',
   },

@@ -1,11 +1,13 @@
 import { View, StyleSheet } from "react-native";
 import SignUp from "../../src/components/auth/SignUp";
+import AuthDetails from "../../src/components/auth/AuthDetails";
  
 export default function SignUpScreen() {
 
   return (
     <View style={styles.container}>
       <SignUp />      
+      <AuthDetails />  
     </View>
   );
 }
