@@ -31,6 +31,16 @@ export default function RootLayout() {
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="signupScreen" 
+          options={{ 
+            title: 'Back to Sign in', 
+            headerShown: true, 
+            headerStyle: {backgroundColor: '#4c87df',},
+            headerTintColor: '#fff',
+            headerTitleStyle: {fontWeight: 'bold',},
+            headerBackTitle: 'back',
+            }} />
+
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style="auto" />

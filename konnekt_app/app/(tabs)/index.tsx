@@ -1,19 +1,17 @@
-import { View, StyleSheet, Button } from "react-native";
+import { View, StyleSheet } from "react-native";
 import { useRouter } from "expo-router"; // Expo Router Navigation
 import SignIn from "../../src/components/auth/SignIn";
-import SignUp from "../../src/components/auth/SignUp";
 import AuthDetails from "../../src/components/auth/AuthDetails";
 
 
+
 export default function HomeScreen() {
-  const router = useRouter(); // Router Hook to Navigate
+  const router = useRouter();
 
   return (
     <View style={styles.container}>
       <SignIn />
-      <SignUp />
       <AuthDetails />       
-
     </View>
     // New Components Declared Above
   );
@@ -24,6 +22,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#fff",
+    backgroundColor: "#A1B5D8",
   },
 });
