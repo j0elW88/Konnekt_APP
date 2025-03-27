@@ -1,12 +1,31 @@
+import React, { useState } from 'react';
 import { useLocalSearchParams } from 'expo-router';
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import * as Location from 'expo-location';
 
 export default function ClubDetailScreen() {
   const { id } = useLocalSearchParams();
+  const [location, setLocation] = useState<Location.LocationObject | null>(null);
 
-  const handleButtonClick = () => {
-    console.log(` Button clicked on club page: ${id}`);
-    Alert.alert("Clicked!", `You clicked on club: ${id}`);
+  const handleCheckIn = async () => {
+    console.log("📍 Location button clicked");
+
+    let { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission Denied', 'Location permission is required.');
+      return;
+    }
+
+    let loc = await Location.getCurrentPositionAsync({});
+    setLocation(loc);
+
+    Alert.alert(
+      "Check-In Successful",
+      `Lat: ${loc.coords.latitude.toFixed(5)}\nLon: ${loc.coords.longitude.toFixed(5)}`
+    );
+
+    // You can now send `loc` to MongoDB or log it
+    console.log("User location:", loc.coords);
   };
 
   return (
@@ -14,8 +33,8 @@ export default function ClubDetailScreen() {
       <Text style={styles.title}>Club Details</Text>
       <Text style={styles.subtitle}>Club ID: {id}</Text>
 
-      <TouchableOpacity style={styles.button} onPress={handleButtonClick}>
-        <Text style={styles.buttonText}>Click Me</Text>
+      <TouchableOpacity style={styles.button} onPress={handleCheckIn}>
+        <Text style={styles.buttonText}>Check In with Location</Text>
       </TouchableOpacity>
     </View>
   );
