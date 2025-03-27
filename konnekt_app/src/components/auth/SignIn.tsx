@@ -31,6 +31,8 @@ export default function SignIn() {
         global.authUser = data.user; // Simulate global user
         setError(null);
         console.log("User signed in:", data.user);
+        router.push("/(tabs)/homepage" as any); //putting as any here for now but might want further verfication page exists
+
       } else {
         setError(data.msg);
       }
