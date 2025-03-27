@@ -36,15 +36,15 @@ export default function RootLayout() {
         <Stack.Screen name="signupScreen" 
           options={{ 
             title: 'Back to Sign in', 
-            headerShown: true, 
+            headerShown: false, 
             headerStyle: {backgroundColor: '#4c87df',},
             headerTintColor: '#fff',
             headerTitleStyle: {fontWeight: 'bold',},
             headerBackTitle: 'back',
             }} />
-            
+          
         <Stack.Screen name="index"  options={{ 
-            title: 'Sign In.', 
+            title: 'Sign In', 
             headerShown: true, 
             headerStyle: {backgroundColor: '#4c87df',},
             headerTintColor: '#fff',             
