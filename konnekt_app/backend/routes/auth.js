@@ -6,7 +6,7 @@ const router = express.Router();
 
 
 router.post("/signup", async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, name } = req.body;
   console.log("Sign-up attempt:", email);
 
   try {
@@ -17,10 +17,10 @@ router.post("/signup", async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    user = new User({ email, password: hashedPassword });
+    user = new User({ email, name, password: hashedPassword });
     await user.save();
 
-    console.log("User created:", email);
+    console.log("User created:", email, name);
     res.status(201).json({ msg: "User created successfully", user: {email: user.email} });
   } catch (err) {
     console.error("Signup error:", err.message);
@@ -30,7 +30,7 @@ router.post("/signup", async (req, res) => {
 
 
 router.post("/signin", async (req, res) => {
-  const { email, password } = req.body;
+  const { email, name, password } = req.body; 
   console.log("Sign-in attempt:", email);
 
   try {
@@ -47,7 +47,7 @@ router.post("/signin", async (req, res) => {
       return res.status(400).json({ msg: "Invalid credentials" });
     }
 
-    console.log("Login successful:", email);
+    console.log("Login successful:", email, name);
     res.json({ msg: "Login successful", user: {email: user.email} });
   } catch (err) {
     console.error("Sign in error:", err.message);

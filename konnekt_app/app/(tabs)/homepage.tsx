@@ -1,0 +1,17 @@
+import React, { useState, useEffect } from "react";
+import Homepage from "../../src/components/pages/Homepage";
+
+export default function HomePageScreen() {
+  const [clubs, setClubs] = useState<{ id: string; name: string }[]>([]);
+
+  useEffect(() => {
+    // Later: fetch this from backend using global.authUser.email
+    setClubs([
+      { name: "Chess Club", id: "chess" },
+      { name: "Robotics Team", id: "robotics" },
+      { name: "Art Society", id: "art" },
+    ]);
+  }, []);
+
+  return <Homepage clubs={clubs} />;
+}

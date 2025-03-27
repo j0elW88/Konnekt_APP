@@ -17,6 +17,7 @@ export default function SignUp() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
@@ -53,6 +54,17 @@ export default function SignUp() {
 
   return (
     <View style={styles.menu}>  {/*email and password square*/}
+      <Text style={styles.label}>Name</Text>
+      <TextInput 
+        style={styles.input} 
+        placeholder="Enter Full Name" 
+        value={name} 
+        onChangeText={(text) => {
+          setName(text);
+          setError(null); /*clears error while new input being added*/
+        }}
+        placeholderTextColor="#aaa" />
+
       <Text style={styles.label}>Email</Text>
       <TextInput 
         style={styles.input} 
@@ -60,7 +72,7 @@ export default function SignUp() {
         value={email} 
         onChangeText={(text) => {
           setEmail(text);
-          setError(null); //clears error while new input being added
+          setError(null); /*clears error while new input being added*/
         }}
         placeholderTextColor="#aaa" />
 
@@ -71,10 +83,11 @@ export default function SignUp() {
         value={password} 
         onChangeText={(text) => {
           setPassword(text);
-          setError(null); //clears error while new input being added
+          setError(null); /*clears error while new input being added*/
         }}
         placeholderTextColor="#aaa" 
         secureTextEntry />
+
 
       {/* Sign Up Button */}
       <TouchableOpacity style={styles.button} onPress={signUp}>
