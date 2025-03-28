@@ -1,31 +1,39 @@
 import React, { useState } from 'react';
 import { useLocalSearchParams } from 'expo-router';
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Dimensions,
+  Platform,
+  ActivityIndicator,
+} from 'react-native';
 import * as Location from 'expo-location';
+import MapView, { Marker } from 'react-native-maps';
 
 export default function ClubDetailScreen() {
   const { id } = useLocalSearchParams();
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const handleCheckIn = async () => {
-    console.log("📍 Location button clicked");
-
-    let { status } = await Location.requestForegroundPermissionsAsync();
+    setLoading(true);
+    const { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permission Denied', 'Location permission is required.');
+      setLocation(null);
+      setLoading(false);
       return;
     }
 
-    let loc = await Location.getCurrentPositionAsync({});
-    setLocation(loc);
-
-    Alert.alert(
-      "Check-In Successful",
-      `Lat: ${loc.coords.latitude.toFixed(5)}\nLon: ${loc.coords.longitude.toFixed(5)}`
-    );
-
-    // You can now send `loc` to MongoDB or log it
-    console.log("User location:", loc.coords);
+    try {
+      const loc = await Location.getCurrentPositionAsync({});
+      setLocation(loc);
+    } catch (error) {
+      console.error("Location fetch failed:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -36,6 +44,59 @@ export default function ClubDetailScreen() {
       <TouchableOpacity style={styles.button} onPress={handleCheckIn}>
         <Text style={styles.buttonText}>Check In with Location</Text>
       </TouchableOpacity>
+
+      {loading && (
+        <ActivityIndicator size="large" color="#4c87df" style={{ marginTop: 20 }} />
+      )}
+
+      {!loading && location && (
+        <>
+          <Text style={styles.locationText}>
+            📍 Latitude: {location.coords.latitude.toFixed(5)}
+          </Text>
+          <Text style={styles.locationText}>
+            📍 Longitude: {location.coords.longitude.toFixed(5)}
+          </Text>
+
+          {Platform.OS !== 'web' ? (
+            <MapView
+              style={styles.map}
+              region={{
+                latitude: location.coords.latitude,
+                longitude: location.coords.longitude,
+                latitudeDelta: 0.01,
+                longitudeDelta: 0.01,
+              }}
+              showsUserLocation
+              showsMyLocationButton
+            >
+              <Marker
+                coordinate={{
+                  latitude: location.coords.latitude,
+                  longitude: location.coords.longitude,
+                }}
+                title="You are here"
+              />
+            </MapView>
+          ) : (
+            <View style={styles.iframeContainer}>
+              <div
+                dangerouslySetInnerHTML={{
+                  __html: `
+                    <iframe 
+                      width="100%" 
+                      height="300" 
+                      style="border:0; border-radius: 12px;" 
+                      loading="lazy" 
+                      allowfullscreen
+                      src="https://maps.google.com/maps?q=${location.coords.latitude},${location.coords.longitude}&z=15&output=embed">
+                    </iframe>`,
+                }}
+              />
+            </View>
+          )}
+        </>
+      )}
     </View>
   );
 }
@@ -45,7 +106,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#A1B5D8',
     padding: 30,
-    justifyContent: 'center',
     alignItems: 'center',
   },
   title: {
@@ -63,11 +123,28 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 25,
     borderRadius: 8,
-    marginTop: 20,
+    marginBottom: 20,
   },
   buttonText: {
     color: '#fff',
     fontWeight: '600',
     fontSize: 16,
+  },
+  locationText: {
+    fontSize: 16,
+    color: '#333',
+    marginBottom: 5,
+  },
+  map: {
+    width: Dimensions.get('window').width * 0.9,
+    height: 300,
+    borderRadius: 12,
+    marginTop: 15,
+  },
+  iframeContainer: {
+    width: '100%',
+    maxWidth: 600,
+    height: 300,
+    marginTop: 15,
   },
 });
