@@ -10,10 +10,14 @@ router.post("/signup", async (req, res) => {
   console.log("Sign-up attempt:", email);
 
   try {
-    let user = await User.findOne({ email });
-    if (user) {
-      console.log("Email Already in Use!");
-      return res.status(400).json({ msg: "Email Already in Use!" });
+
+    const existingUser = await User.findOne({ 
+      $or: [{ email }, { username }]
+    });
+
+    if (existingUser) {
+      const conflict = existingUser.email === email ? "Email" : "Username";
+      return res.status(400).json({ msg: `${conflict} already in use!` });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -31,10 +35,13 @@ router.post("/signup", async (req, res) => {
 
 router.post("/signin", async (req, res) => {
   const { email, name, password } = req.body; 
-  console.log("Sign-in attempt:", email);
+  
+  console.log("Sign-in attempt:", email, username); //bugtesting
 
   try {
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ 
+      $or: [{email:emailOrUsername }, { username: emailOrUsername }]
+      });
 
     if (!user) {
       console.log("User not found");
@@ -47,8 +54,9 @@ router.post("/signin", async (req, res) => {
       return res.status(400).json({ msg: "Invalid credentials" });
     }
 
-    console.log("Login successful:", email, name);
-    res.json({ msg: "Login successful", user: {email: user.email} });
+    console.log("Login successful:", email);
+
+    res.json({ msg: "Login successful", user: {email: user.email}, });
   } catch (err) {
     console.error("Sign in error:", err.message);
     res.status(500).json({ msg: "Server error" });
