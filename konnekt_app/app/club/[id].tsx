@@ -3,6 +3,9 @@ import { useLocalSearchParams } from 'expo-router';
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import * as Location from 'expo-location';
 
+import { useAuthRedirect } from '../../src/hooks/useAuthRedirect';
+useAuthRedirect(); //If Ever Signed Out, returns to SignIn
+
 export default function ClubDetailScreen() {
   const { id } = useLocalSearchParams();
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
@@ -70,4 +73,4 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontSize: 16,
   },
-});
+})

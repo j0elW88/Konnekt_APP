@@ -23,8 +23,8 @@ export default function Homepage({ clubs }: Props) {
   //Change global.authUser?.email to .name when we add username, this prob can be removed entirely later
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.header}>Welcome {global.authUser?.email}</Text> 
-      <Text style={styles.subheader}>Your Clubs</Text>
+      <Text style={styles.header}>Welcome {global.authUser?.username}</Text> 
+      <Text style={styles.subheader}>Organizations</Text>
 
       {clubs.length === 0 ? (
         <Text style={styles.noClubsText}>You’re not in any clubs yet.</Text>

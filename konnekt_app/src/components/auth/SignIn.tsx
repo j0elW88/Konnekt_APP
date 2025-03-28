@@ -31,7 +31,7 @@ export default function SignIn() {
         global.authUser = data.user; // Simulate global user
         setError(null);
         console.log("User signed in:", data.user);
-        router.push("/(tabs)/homepage" as any); //putting as any here for now but might want further verfication page exists
+        router.replace("/(tabs)/homepage" as any); //putting as any here for now but might want further verfication page exists
 
       } else {
         setError(data.msg);
@@ -75,7 +75,7 @@ export default function SignIn() {
       {error && <Text style={styles.error}>{error}</Text>}
       <Text style={styles.label2}>---- or ---</Text>
       {/*Create Account Button*/}
-      <TouchableOpacity style={styles.newAccButton} onPress={() => router.push('/signupScreen')}>
+      <TouchableOpacity style={styles.newAccButton} onPress={() => router.replace('/signupScreen')}>
         <Text style={styles.newAccButtonText}>Create Account</Text>
       </TouchableOpacity>
 

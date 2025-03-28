@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from "react";
 import Homepage from "../../src/components/pages/Homepage";
+import { useAuthRedirect } from '../../src/hooks/useAuthRedirect';
 
 export default function HomePageScreen() {
+  useAuthRedirect(); //If Ever Signed Out, returns to SignIn
+  
   const [clubs, setClubs] = useState<{ id: string; name: string }[]>([]);
 
   useEffect(() => {
