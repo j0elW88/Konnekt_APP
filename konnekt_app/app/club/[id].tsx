@@ -8,7 +8,7 @@ export default function ClubDetailScreen() {
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
 
   const handleCheckIn = async () => {
-    console.log("📍 Location button clicked");
+    console.log("Location button clicked");
 
     let { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== 'granted') {
