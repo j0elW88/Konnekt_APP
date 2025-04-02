@@ -3,7 +3,8 @@ import { useLocalSearchParams } from 'expo-router';
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import * as Location from 'expo-location';
 
-import { useAuthRedirect } from '../../src/hooks/useAuthRedirect';
+import useAuthRedirect from "../../src/hooks/useAuthRedirect"; //send back to index if signedout
+
 useAuthRedirect(); //If Ever Signed Out, returns to SignIn
 
 export default function ClubDetailScreen() {
