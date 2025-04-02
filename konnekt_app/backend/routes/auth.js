@@ -4,15 +4,15 @@ const User = require("../models/User");
 
 const router = express.Router();
 
-
+// SIGNUP ROUTE
 router.post("/signup", async (req, res) => {
-  const { email, password, name } = req.body;
-  console.log("Sign-up attempt:", email);
+  const { email, password, username, full_name } = req.body;
+  console.log("Sign-up attempt:", email, username);
 
   try {
-
-    const existingUser = await User.findOne({ 
-      $or: [{ email }, { username }]
+    // Check if email OR username already exists
+    const existingUser = await User.findOne({
+      $or: [{ email }, { username }],
     });
 
     if (existingUser) {
@@ -21,11 +21,18 @@ router.post("/signup", async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    user = new User({ email, name, password: hashedPassword });
+    const user = new User({ email, username, full_name, password: hashedPassword });
     await user.save();
 
-    console.log("User created:", email, name);
-    res.status(201).json({ msg: "User created successfully", user: {email: user.email} });
+    console.log("User created:", user.email, user.username);
+    res.status(201).json({
+      msg: "User created successfully",
+      user: {
+        email: user.email,
+        username: user.username,
+        full_name: user.full_name,
+      },
+    });
   } catch (err) {
     console.error("Signup error:", err.message);
     res.status(500).json({ msg: "Server error" });
@@ -33,32 +40,35 @@ router.post("/signup", async (req, res) => {
 });
 
 
+// SIGNIN ROUTE (email OR username)
 router.post("/signin", async (req, res) => {
-  const { email, name, password } = req.body; 
-  
-  console.log("Sign-in attempt:", email, username); //bugtesting
+  const { identifier, password } = req.body;
+  console.log("Sign-in attempt:", identifier);
 
   try {
-    const user = await User.findOne({ 
-      $or: [{email:emailOrUsername }, { username: emailOrUsername }]
-      });
+    const user = await User.findOne({
+      $or: [{ email: identifier }, { username: identifier }],
+    });
 
     if (!user) {
-      console.log("User not found");
       return res.status(400).json({ msg: "User not found" });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      console.log("Incorrect password");
       return res.status(400).json({ msg: "Invalid credentials" });
     }
 
-    console.log("Login successful:", email);
-
-    res.json({ msg: "Login successful", user: {email: user.email}, });
+    res.json({
+      msg: "Login successful",
+      user: {
+        email: user.email,
+        username: user.username,
+        full_name: user.full_name,
+      },
+    });
   } catch (err) {
-    console.error("Sign in error:", err.message);
+    console.error("Signin error:", err.message);
     res.status(500).json({ msg: "Server error" });
   }
 });
