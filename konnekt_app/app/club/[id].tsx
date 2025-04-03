@@ -1,35 +1,56 @@
 import React, { useState } from 'react';
 import { useLocalSearchParams } from 'expo-router';
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+  ActivityIndicator,
+} from 'react-native';
 import * as Location from 'expo-location';
 
-import useAuthRedirect from "../../src/hooks/useAuthRedirect"; //send back to index if signedout
+import useAuthRedirect from '../../src/hooks/useAuthRedirect'; // send back to index if signed out
+import ProximityChecker from '../../src/components/ProximityChecker'; // new component
 
-useAuthRedirect(); //If Ever Signed Out, returns to SignIn
 
 export default function ClubDetailScreen() {
+  useAuthRedirect();
+
   const { id } = useLocalSearchParams();
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const handleCheckIn = async () => {
     console.log("Location button clicked");
+    setLoading(true);
 
     let { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permission Denied', 'Location permission is required.');
+      Alert.alert('Please Enable Location Sharing', 'Location permission is required.');
+      setLoading(false);
       return;
     }
 
-    let loc = await Location.getCurrentPositionAsync({});
-    setLocation(loc);
+    try {
+      let loc = await Location.getCurrentPositionAsync({});
+      setLocation(loc);
 
-    Alert.alert(
-      "Check-In Successful",
-      `Lat: ${loc.coords.latitude.toFixed(5)}\nLon: ${loc.coords.longitude.toFixed(5)}`
-    );
+     /* 
+        Alert.alert(
+        "Check-In Successful",
+        `Lat: ${loc.coords.latitude.toFixed(5)}\nLon: ${loc.coords.longitude.toFixed(5)}` //Extra Notification for IOS
+      );
 
-    // You can now send `loc` to MongoDB or log it
-    console.log("User location:", loc.coords);
+      */
+
+      console.log("User location:", loc.coords);
+    } catch (err) {
+      console.error("Location fetch error:", err);
+      Alert.alert("Error", "Unable to retrieve location.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -37,9 +58,15 @@ export default function ClubDetailScreen() {
       <Text style={styles.title}>Club Details</Text>
       <Text style={styles.subtitle}>Club ID: {id}</Text>
 
-      <TouchableOpacity style={styles.button} onPress={handleCheckIn}>
-        <Text style={styles.buttonText}>Check In with Location</Text>
-      </TouchableOpacity>
+      {loading ? (
+        <ActivityIndicator size="large" color="#4c87df" style={{ marginTop: 20 }} />
+      ) : (
+        <TouchableOpacity style={styles.button} onPress={handleCheckIn}>
+          <Text style={styles.buttonText}>Check In with Location</Text>
+        </TouchableOpacity>
+      )}
+
+      {location && <ProximityChecker anchor={location} />}
     </View>
   );
 }
@@ -74,4 +101,4 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontSize: 16,
   },
-})
+});

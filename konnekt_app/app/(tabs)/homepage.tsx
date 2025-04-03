@@ -5,6 +5,7 @@ import useAuthRedirect from "../../src/hooks/useAuthRedirect"; //send back to in
 
 
 export default function HomePageScreen() {
+  
   useAuthRedirect(); //If Ever Signed Out, returns to SignIn
   
   const [clubs, setClubs] = useState<{ id: string; name: string }[]>([]);
