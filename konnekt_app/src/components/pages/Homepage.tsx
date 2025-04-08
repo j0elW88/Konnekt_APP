@@ -12,8 +12,12 @@ interface Club {
   id: string;
   name: string;
 <<<<<<< HEAD
+<<<<<<< HEAD
   color?: string;
 };
+=======
+}
+>>>>>>> parent of 43d71eac (Beginning Implementation of Create Club Page)
 =======
 }
 >>>>>>> parent of 43d71eac (Beginning Implementation of Create Club Page)
@@ -27,6 +31,7 @@ export default function Homepage({ clubs }: Props) {
 
   //Change global.authUser?.email to .name when we add username, this prob can be removed entirely later
   return (
+<<<<<<< HEAD
 <<<<<<< HEAD
     <View style={styles.container}>
       <Text style={styles.heading}>Your Clubs</Text>
@@ -60,6 +65,12 @@ export default function Homepage({ clubs }: Props) {
       <Text style={styles.header}>Welcome {global.authUser?.username}</Text> 
       <Text style={styles.subheader}>Organizations</Text>
 
+=======
+    <ScrollView contentContainerStyle={styles.container}>
+      <Text style={styles.header}>Welcome {global.authUser?.username}</Text> 
+      <Text style={styles.subheader}>Organizations</Text>
+
+>>>>>>> parent of 43d71eac (Beginning Implementation of Create Club Page)
       {clubs.length === 0 ? (
         <Text style={styles.noClubsText}>You’re not in any clubs yet.</Text>
       ) : (
@@ -74,12 +85,16 @@ export default function Homepage({ clubs }: Props) {
         ))
       )}
     </ScrollView>
+<<<<<<< HEAD
+>>>>>>> parent of 43d71eac (Beginning Implementation of Create Club Page)
+=======
 >>>>>>> parent of 43d71eac (Beginning Implementation of Create Club Page)
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+<<<<<<< HEAD
 <<<<<<< HEAD
     padding: 20,
     backgroundColor: "#f4f6fc",
@@ -109,10 +124,15 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 8,
 =======
+=======
+>>>>>>> parent of 43d71eac (Beginning Implementation of Create Club Page)
     paddingTop: 60,
     paddingHorizontal: 20,
     backgroundColor: "#A1B5D8",
     flexGrow: 1,
+<<<<<<< HEAD
+>>>>>>> parent of 43d71eac (Beginning Implementation of Create Club Page)
+=======
 >>>>>>> parent of 43d71eac (Beginning Implementation of Create Club Page)
     alignItems: "center",
   },
