@@ -27,13 +27,6 @@ export default function TabLayout() {
         }),
       }}>
       <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Login',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
-        }}
-      />
-      <Tabs.Screen
         name="homepage"
         options={{
           title: 'Clubs',
@@ -47,6 +40,17 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
         }}
       />
+
+      <Tabs.Screen
+        name="discover"
+        options={{
+          title: 'Discover',
+        
+        }}
+      />
+
+
     </Tabs>
+    
   );
 }

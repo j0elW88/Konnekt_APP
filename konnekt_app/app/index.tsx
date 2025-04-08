@@ -1,9 +1,9 @@
 import { View, StyleSheet } from "react-native";
-//import { useRouter } from "expo-router"; // Expo Router Navigation
+import { useRouter } from "expo-router"; // Expo Router Navigation
 import SignIn from "../src/components/auth/SignIn";
 import AuthDetails from "../src/components/auth/AuthDetails";
 import { useEffect } from "react";
-import { useRouter } from 'expo-router';
+
 
 
 

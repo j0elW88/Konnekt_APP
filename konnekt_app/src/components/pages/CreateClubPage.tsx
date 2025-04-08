@@ -7,18 +7,11 @@ import {
   TouchableOpacity,
   Switch,
   Alert,
+  Image
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { IP_ADDRESS } from '../src/../config/globalvariables';
-
 import * as ImagePicker from 'expo-image-picker';
-import { Image } from 'react-native';
-
-const [image, setImage] = useState<string | null>(null);
-
-
-
-const API_URL = `http://${IP_ADDRESS}:5000/api/clubs/create`;
 
 export default function CreateClubPage() {
   const router = useRouter();
@@ -27,34 +20,64 @@ export default function CreateClubPage() {
   const [color, setColor] = useState('#4c87df');
   const [useLocationTracking, setUseLocationTracking] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [image, setImage] = useState<string | null>(null);
+  const [isPublic, setIsPublic] = useState(false);
 
   const handleCreateClub = async () => {
+    if (!global.authUser || !global.authUser._id) {
+      Alert.alert("Error", "User not authenticated. Try signing in again.");
+      console.log("authUser missing:", global.authUser);
+      return;
+    }
+
+    console.log("📦 Creating club...");
+
+    setLoading(true);
+
     try {
       const response = await fetch(`http://${IP_ADDRESS}:5000/api/clubs/create`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-            name,
-            color,
-            description,
-            imageUrl: image, // sends the URI for now
-            useLocationTracking,
-            createdBy: global.authUser?._id,
-          }),
+          name,
+          color,
+          description,
+          imageUrl: image,
+          useLocationTracking,
+          isPublic,
+          owner: global.authUser._id, 
+        }),
       });
-  
+
       const data = await response.json();
-  
+      console.log("✅ Server responded:", data);
+
       if (response.ok) {
-        console.log("Club created successfully:", data);
-        router.replace("/(tabs)/homepage"); // or you could push to `/club/${data._id}` later
+        Alert.alert("Success", "Club created!");
+        router.replace("/(tabs)/homepage");
       } else {
-        console.error("Failed to create club:", data);
-        Alert.alert("Error", data.msg || "Something went wrong.");
+        console.error("❌ Club creation failed:", data);
+        Alert.alert("Error", data.error || "Something went wrong.");
       }
     } catch (error) {
-      console.error("Error creating club:", error);
-      Alert.alert("Error", "Failed to connect to server.");
+      console.error("❌ Network error:", error);
+      Alert.alert("Error", "Could not connect to server.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const pickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+      base64: true,
+    });
+
+    if (!result.canceled) {
+      setImage(result.assets[0].uri);
     }
   };
 
@@ -80,6 +103,11 @@ export default function CreateClubPage() {
       />
 
       <View style={styles.row}>
+        <Text style={styles.label}>Make Club Public</Text>
+        <Switch value={isPublic} onValueChange={setIsPublic} />
+      </View>
+
+      <View style={styles.row}>
         <Text style={styles.label}>Enable Location Tracking</Text>
         <Switch
           value={useLocationTracking}
@@ -87,15 +115,16 @@ export default function CreateClubPage() {
         />
       </View>
 
-    <TouchableOpacity style={[styles.button, { marginBottom: 10 }]} onPress={pickImage}>
-    <Text style={styles.buttonText}>Choose Club Image</Text>
-        </TouchableOpacity>
-        {image && (
-            <Image
-                source={{ uri: image }}
-                style={{ width: 200, height: 120, borderRadius: 8, marginBottom: 16 }}
-            />
-        )}
+      <TouchableOpacity style={[styles.button, { marginBottom: 10 }]} onPress={pickImage}>
+        <Text style={styles.buttonText}>Choose Club Image</Text>
+      </TouchableOpacity>
+
+      {image && (
+        <Image
+          source={{ uri: image }}
+          style={{ width: 200, height: 120, borderRadius: 8, marginBottom: 16 }}
+        />
+      )}
 
       <TouchableOpacity style={styles.button} onPress={handleCreateClub} disabled={loading}>
         <Text style={styles.buttonText}>
@@ -105,21 +134,6 @@ export default function CreateClubPage() {
     </View>
   );
 }
-
-const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
-      base64: true, // you can use this or send file as multipart later
-    });
-  
-    if (!result.canceled) {
-      setImage(result.assets[0].uri);
-    }
-};
-  
 
 const styles = StyleSheet.create({
   container: {

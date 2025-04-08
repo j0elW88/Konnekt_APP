@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 type Club = {
   _id: string;
   name: string;
+  color?: string;
 };
 
 type HomepageProps = {
@@ -17,15 +18,23 @@ export default function Homepage({ clubs }: HomepageProps) {
   return (
     <View style={styles.container}>
       <Text style={styles.heading}>Your Clubs</Text>
+
       {clubs.map((club) => (
         <TouchableOpacity
           key={club._id}
-          style={styles.clubButton}
+          style={[styles.clubButton, { backgroundColor: club.color || '#fff' }]}
           onPress={() => router.push(`/club/${club._id}`)}
         >
           <Text style={styles.clubText}>{club.name}</Text>
         </TouchableOpacity>
       ))}
+
+      <TouchableOpacity
+        style={[styles.clubButton, { backgroundColor: '#4c87df' }]}
+        onPress={() => router.push('/join-club')}
+      >
+        <Text style={styles.createButtonText}>Join a Club</Text>
+      </TouchableOpacity>
 
       <TouchableOpacity
         style={styles.createButton}
@@ -50,17 +59,17 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   clubButton: {
-    backgroundColor: "#fff",
     padding: 15,
     marginBottom: 12,
     borderRadius: 10,
+    alignItems: "center",
     borderColor: "#ccc",
     borderWidth: 1,
   },
   clubText: {
     fontSize: 16,
     fontWeight: "500",
-    color: "#333",
+    color: "#fff",
   },
   createButton: {
     backgroundColor: "#4c87df",
