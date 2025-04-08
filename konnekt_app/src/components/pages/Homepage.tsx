@@ -13,8 +13,12 @@ interface Club {
   name: string;
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   color?: string;
 };
+=======
+}
+>>>>>>> parent of 43d71eac (Beginning Implementation of Create Club Page)
 =======
 }
 >>>>>>> parent of 43d71eac (Beginning Implementation of Create Club Page)
@@ -31,6 +35,7 @@ export default function Homepage({ clubs }: Props) {
 
   //Change global.authUser?.email to .name when we add username, this prob can be removed entirely later
   return (
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
     <View style={styles.container}>
@@ -71,6 +76,12 @@ export default function Homepage({ clubs }: Props) {
       <Text style={styles.subheader}>Organizations</Text>
 
 >>>>>>> parent of 43d71eac (Beginning Implementation of Create Club Page)
+=======
+    <ScrollView contentContainerStyle={styles.container}>
+      <Text style={styles.header}>Welcome {global.authUser?.username}</Text> 
+      <Text style={styles.subheader}>Organizations</Text>
+
+>>>>>>> parent of 43d71eac (Beginning Implementation of Create Club Page)
       {clubs.length === 0 ? (
         <Text style={styles.noClubsText}>You’re not in any clubs yet.</Text>
       ) : (
@@ -86,6 +97,9 @@ export default function Homepage({ clubs }: Props) {
       )}
     </ScrollView>
 <<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> parent of 43d71eac (Beginning Implementation of Create Club Page)
+=======
 >>>>>>> parent of 43d71eac (Beginning Implementation of Create Club Page)
 =======
 >>>>>>> parent of 43d71eac (Beginning Implementation of Create Club Page)
@@ -94,6 +108,7 @@ export default function Homepage({ clubs }: Props) {
 
 const styles = StyleSheet.create({
   container: {
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
     padding: 20,
@@ -126,11 +141,16 @@ const styles = StyleSheet.create({
 =======
 =======
 >>>>>>> parent of 43d71eac (Beginning Implementation of Create Club Page)
+=======
+>>>>>>> parent of 43d71eac (Beginning Implementation of Create Club Page)
     paddingTop: 60,
     paddingHorizontal: 20,
     backgroundColor: "#A1B5D8",
     flexGrow: 1,
 <<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> parent of 43d71eac (Beginning Implementation of Create Club Page)
+=======
 >>>>>>> parent of 43d71eac (Beginning Implementation of Create Club Page)
 =======
 >>>>>>> parent of 43d71eac (Beginning Implementation of Create Club Page)

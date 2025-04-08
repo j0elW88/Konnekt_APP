@@ -1,5 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+  ActivityIndicator,
+} from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as Location from 'expo-location';
 
@@ -18,6 +25,8 @@ type Club = {
   admins: string[];
 };
 
+
+
 export default function ClubDetailScreen() {
   useAuthRedirect();
   const { id } = useLocalSearchParams();
@@ -29,7 +38,8 @@ export default function ClubDetailScreen() {
 
   const fetchClub = async () => {
     try {
-      const response = await fetch(`http://${IP_ADDRESS}:5000/api/clubs/${id}`);
+      const clubId = Array.isArray(id) ? id[0] : id;
+      const response = await fetch(`http://${IP_ADDRESS}:5000/api/clubs/${clubId}`);
       const data = await response.json();
       setClub(data);
     } catch (err) {
@@ -43,7 +53,7 @@ export default function ClubDetailScreen() {
   }, [id]);
 
   const handleCheckIn = async () => {
-    console.log("Location button clicked");
+    console.log("📍 Location button clicked");
     setLoading(true);
 
     let { status } = await Location.requestForegroundPermissionsAsync();
@@ -68,8 +78,9 @@ export default function ClubDetailScreen() {
     return <ActivityIndicator size="large" color="#4c87df" style={{ marginTop: 50 }} />;
   }
 
-  const isAdmin = club.admins?.includes(global.authUser?._id ?? '');
-  const isOwner = club.owner === global.authUser?._id;
+  const currentUserId = global.authUser?._id ?? '';
+  const isAdmin = club.admins?.includes(currentUserId);
+  const isOwner = club.owner === currentUserId;
 
   return (
     <View style={styles.container}>
@@ -88,7 +99,7 @@ export default function ClubDetailScreen() {
 
       <ClubMembersPanel
         clubId={club._id}
-        currentUserId={global.authUser?._id ?? ''}
+        currentUserId={currentUserId}
         isAdmin={isAdmin}
         isOwner={isOwner}
       />
