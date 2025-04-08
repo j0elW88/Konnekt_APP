@@ -24,7 +24,7 @@ export default function AuthDetails() {
     <View style={styles.container}>
       {authUser ? (
         <>
-          <Text>{`Signed in as: ${authUser.email}`}</Text>
+          <Text>{`Signed in as: ${authUser.username}`}</Text>
           <Button title="Sign Out" onPress={handleSignOut} />
         </>
       ) : (

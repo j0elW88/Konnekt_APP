@@ -1,15 +1,23 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import Homepage from "../../src/components/pages/Homepage";
+import useAuthRedirect from "../../src/hooks/useAuthRedirect";
+
+type Club = {
+  _id: string;
+  name: string;
+};
 
 export default function HomePageScreen() {
-  const [clubs, setClubs] = useState<{ id: string; name: string }[]>([]);
+  useAuthRedirect();
+
+  const [clubs, setClubs] = useState<Club[]>([]);
 
   useEffect(() => {
-    // Later: fetch this from backend using global.authUser.email
+    // Replace this with a real fetch later
     setClubs([
-      { name: "Chess Club", id: "chess" },
-      { name: "Robotics Team", id: "robotics" },
-      { name: "Art Society", id: "art" },
+      { _id: "chess", name: "Chess Club" },
+      { _id: "robotics", name: "Robotics Team" },
+      { _id: "art", name: "Art Society" },
     ]);
   }, []);
 

@@ -1,84 +1,77 @@
-import React from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  ScrollView,
-} from "react-native";
-import { useRouter } from "expo-router";
+import React from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { useRouter } from 'expo-router';
 
-interface Club {
-  id: string;
+type Club = {
+  _id: string;
   name: string;
-}
+};
 
-interface Props {
+type HomepageProps = {
   clubs: Club[];
-}
+};
 
-export default function Homepage({ clubs }: Props) {
+export default function Homepage({ clubs }: HomepageProps) {
   const router = useRouter();
 
-  //Change global.authUser?.email to .name when we add username, this prob can be removed entirely later
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.header}>Welcome {global.authUser?.email}</Text> 
-      <Text style={styles.subheader}>Your Clubs</Text>
+    <View style={styles.container}>
+      <Text style={styles.heading}>Your Clubs</Text>
+      {clubs.map((club) => (
+        <TouchableOpacity
+          key={club._id}
+          style={styles.clubButton}
+          onPress={() => router.push(`/club/${club._id}`)}
+        >
+          <Text style={styles.clubText}>{club.name}</Text>
+        </TouchableOpacity>
+      ))}
 
-      {clubs.length === 0 ? (
-        <Text style={styles.noClubsText}>You’re not in any clubs yet.</Text>
-      ) : (
-        clubs.map((club) => (
-          <TouchableOpacity
-            key={club.id}
-            style={styles.button}
-            onPress={() => router.push(`/club/${club.id}` as any)}
-          >
-            <Text style={styles.buttonText}>{club.name}</Text>
-          </TouchableOpacity>
-        ))
-      )}
-    </ScrollView>
+      <TouchableOpacity
+        style={styles.createButton}
+        onPress={() => router.push('/create-club')}
+      >
+        <Text style={styles.createButtonText}>+ Create New Club</Text>
+      </TouchableOpacity>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    paddingTop: 60,
-    paddingHorizontal: 20,
-    backgroundColor: "#A1B5D8",
-    flexGrow: 1,
-    alignItems: "center",
+    padding: 20,
+    backgroundColor: "#f4f6fc",
+    flex: 1,
   },
-  header: {
-    fontSize: 24,
+  heading: {
+    fontSize: 22,
     fontWeight: "bold",
-    color: "#333",
-    marginBottom: 8,
-  },
-  subheader: {
-    fontSize: 20,
-    fontWeight: "600",
     marginBottom: 20,
-    color: "#444",
+    textAlign: "center",
   },
-  noClubsText: {
+  clubButton: {
+    backgroundColor: "#fff",
+    padding: 15,
+    marginBottom: 12,
+    borderRadius: 10,
+    borderColor: "#ccc",
+    borderWidth: 1,
+  },
+  clubText: {
     fontSize: 16,
-    color: "#666",
-    marginTop: 20,
+    fontWeight: "500",
+    color: "#333",
   },
-  button: {
-    width: "100%",
+  createButton: {
     backgroundColor: "#4c87df",
     padding: 15,
-    borderRadius: 10,
-    marginBottom: 12,
+    borderRadius: 8,
     alignItems: "center",
+    marginTop: 20,
   },
-  buttonText: {
+  createButtonText: {
     color: "#fff",
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: "bold",
   },
 });

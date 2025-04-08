@@ -35,15 +35,15 @@ export default function RootLayout() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="signupScreen" 
           options={{ 
-            title: 'Back to Sign in', 
-            headerShown: false, 
+            title: 'Create Account', 
+            headerShown: true, 
             headerStyle: {backgroundColor: '#4c87df',},
             headerTintColor: '#fff',
             headerTitleStyle: {fontWeight: 'bold',},
             headerBackTitle: 'back',
             }} />
           
-        <Stack.Screen name="index"  options={{ 
+        <Stack.Screen name="index" options={{ 
             title: 'Sign In', 
             headerShown: true, 
             headerStyle: {backgroundColor: '#4c87df',},
