@@ -19,15 +19,11 @@ router.post('/create', async (req, res) => {
       members: [owner],
       admins: [owner],
     });
-    
 
     await club.save();
-
-    // Update the user's club list
     await User.findByIdAndUpdate(owner, { $push: { clubs: club._id } });
 
-
-    res.status(201).json(club); 
+    res.status(201).json(club);
   } catch (err) {
     console.error('Error creating club:', err);
     res.status(500).json({ error: 'Failed to Create Club (SERVER ERROR)' });
@@ -44,22 +40,31 @@ router.get('/user/:userId', async (req, res) => {
   }
 });
 
-// Join a club
+// Join a public club
 router.post('/:id/join', async (req, res) => {
   try {
     const { userId } = req.body;
     const club = await Club.findById(req.params.id);
+    const user = await User.findById(userId);
 
-    if (!club) return res.status(404).json({ error: 'Club not found' });
-
-    if (!club.pending.includes(userId)) {
-      club.pending.push(userId);
-      await club.save();
+    if (!club || !user) {
+      return res.status(404).json({ error: 'Club or user not found' });
     }
 
-    res.json({ message: 'Join request sent' });
+    if (!club.members.includes(userId)) {
+      club.members.push(userId);
+    }
+    if (!user.clubs.includes(club._id)) {
+      user.clubs.push(club._id);
+    }
+
+    await club.save();
+    await user.save();
+
+    res.json({ message: 'Joined club successfully', club });
   } catch (err) {
-    res.status(500).json({ error: 'Join failed' });
+    console.error("Join failed:", err);
+    res.status(500).json({ error: 'Join failed (server error)' });
   }
 });
 
@@ -87,7 +92,7 @@ router.patch('/:id/approve/:userId', async (req, res) => {
   }
 });
 
-// Update club info (only admins)
+// Update club
 router.patch('/:id', async (req, res) => {
   try {
     const { updates } = req.body;
@@ -98,9 +103,7 @@ router.patch('/:id', async (req, res) => {
   }
 });
 
-// IMPORTANT USER MANIPULATION FUNCTIONS
-
-// GET MEMBERS OF CLUB
+// Get members/admins/owner
 router.get('/:id/members', async (req, res) => {
   try {
     const club = await Club.findById(req.params.id).populate('members admins owner', 'username full_name');
@@ -114,7 +117,7 @@ router.get('/:id/members', async (req, res) => {
   }
 });
 
-// PROMOTE TO ADMIN
+// Promote to admin
 router.patch('/:id/promote/:userId', async (req, res) => {
   try {
     const club = await Club.findById(req.params.id);
@@ -128,7 +131,7 @@ router.patch('/:id/promote/:userId', async (req, res) => {
   }
 });
 
-// DEMOTE ADMIN
+// Demote admin
 router.patch('/:id/demote/:userId', async (req, res) => {
   try {
     const club = await Club.findById(req.params.id);
@@ -140,7 +143,7 @@ router.patch('/:id/demote/:userId', async (req, res) => {
   }
 });
 
-// DELETE CLUB (owner only)
+// Delete club (owner only)
 router.delete('/:id', async (req, res) => {
   try {
     const club = await Club.findById(req.params.id);
@@ -160,27 +163,41 @@ router.patch('/:id/leave', async (req, res) => {
   try {
     const { userId } = req.body;
     const club = await Club.findById(req.params.id);
-    if (!club) return res.status(404).json({ error: 'Club not found' });
+    const user = await User.findById(userId);
 
-    // Remove from members/admins/pending
+    if (!club || !user) {
+      return res.status(404).json({ error: 'Club or user not found' });
+    }
+
+    const isOwner = club.owner.toString() === userId;
+    const isOnlyMember = club.members.length === 1;
+
+    if (isOwner && isOnlyMember) {
+      await club.deleteOne();
+      await User.findByIdAndUpdate(userId, { $pull: { clubs: club._id } });
+      return res.json({ message: 'Club deleted by owner (only member)', deleted: true });
+    }
+
+    // Remove user from all arrays
     club.members = club.members.filter(id => id.toString() !== userId);
     club.admins = club.admins.filter(id => id.toString() !== userId);
     club.pending = club.pending.filter(id => id.toString() !== userId);
-
     await club.save();
 
-    // Also remove club from user's record
-    await User.findByIdAndUpdate(userId, {
-      $pull: { clubs: club._id }
-    });
+    // Remove club from user
+    user.clubs = user.clubs.filter(id => id.toString() !== club._id.toString());
+    await user.save();
 
-    res.json({ message: 'Left club successfully' });
+    res.json({ message: 'Left club successfully', deleted: false });
   } catch (err) {
+    console.error('Leave club error:', err);
     res.status(500).json({ error: 'Failed to leave club' });
   }
 });
 
-// GET PUBLIC CLUBS
+
+
+// Get public clubs
 router.get('/public', async (req, res) => {
   try {
     const clubs = await Club.find({ isPublic: true });
@@ -190,7 +207,7 @@ router.get('/public', async (req, res) => {
   }
 });
 
-// JOIN CODE GENERATOR
+// Reset join code
 router.patch('/:id/join-code/reset', async (req, res) => {
   try {
     const club = await Club.findById(req.params.id);
@@ -207,6 +224,21 @@ router.patch('/:id/join-code/reset', async (req, res) => {
   } catch (err) {
     console.error("Error resetting join code:", err);
     res.status(500).json({ error: "Failed to reset join code" });
+  }
+});
+
+// Get single club by ID
+router.get('/:id', async (req, res) => {
+  try {
+    const club = await Club.findById(req.params.id)
+      .populate('owner admins members', 'username full_name');
+    if (!club) {
+      return res.status(404).json({ error: 'Club not found' });
+    }
+    res.json(club);
+  } catch (err) {
+    console.error('Error fetching club:', err);
+    res.status(500).json({ error: 'Failed to fetch club data' });
   }
 });
 

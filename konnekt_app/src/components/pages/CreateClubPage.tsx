@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   Switch,
   Alert,
-  Image
+  Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { IP_ADDRESS } from '../src/../config/globalvariables';
@@ -25,12 +25,12 @@ export default function CreateClubPage() {
 
   const handleCreateClub = async () => {
     if (!global.authUser || !global.authUser._id) {
-      Alert.alert("Error", "User not authenticated. Try signing in again.");
-      console.log("authUser missing:", global.authUser);
+      Alert.alert("Error", "User not authenticated. Please sign in again.");
+      console.log("global.authUser is missing or incomplete:", global.authUser);
       return;
     }
 
-    console.log("📦 Creating club...");
+    console.log("Creating club with owner ID:", global.authUser._id);
 
     setLoading(true);
 
@@ -45,22 +45,22 @@ export default function CreateClubPage() {
           imageUrl: image,
           useLocationTracking,
           isPublic,
-          owner: global.authUser._id, 
+          owner: global.authUser._id,
         }),
       });
 
       const data = await response.json();
-      console.log("✅ Server responded:", data);
+      console.log("Club creation response:", data);
 
       if (response.ok) {
         Alert.alert("Success", "Club created!");
         router.replace("/(tabs)/homepage");
       } else {
-        console.error("❌ Club creation failed:", data);
+        console.error("Club creation failed:", data);
         Alert.alert("Error", data.error || "Something went wrong.");
       }
     } catch (error) {
-      console.error("❌ Network error:", error);
+      console.error("Network error during club creation:", error);
       Alert.alert("Error", "Could not connect to server.");
     } finally {
       setLoading(false);

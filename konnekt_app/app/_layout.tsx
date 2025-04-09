@@ -6,11 +6,8 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
 
-
-
 import { useColorScheme } from '@/hooks/useColorScheme';
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
@@ -31,39 +28,54 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
+      
+      <Stack screenOptions={{ animation: 'slide_from_right', presentation: 'card' }}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen
           name="create-club"
           options={{
-            headerTitle: '', 
-          }}/>
-
-      <Stack.Screen
+            headerTitle: '',
+          }}
+        />
+        <Stack.Screen
           name="join-club"
           options={{
-            headerTitle: '', 
-          }}/>
-
-        <Stack.Screen name="signupScreen" 
-          options={{ 
-            title: 'Create Account', 
-            headerShown: true, 
-            headerStyle: {backgroundColor: '#4c87df',},
+            headerTitle: '',
+          }}
+        />
+        <Stack.Screen
+          name="signupScreen"
+          options={{
+            title: 'Create Account',
+            headerShown: true,
+            headerStyle: { backgroundColor: '#4c87df' },
             headerTintColor: '#fff',
-            headerTitleStyle: {fontWeight: 'bold',},
+            headerTitleStyle: { fontWeight: 'bold' },
             headerBackTitle: 'back',
-            }} />
-          
-        <Stack.Screen name="index" options={{ 
-            title: 'Sign In', 
-            headerShown: true, 
-            headerStyle: {backgroundColor: '#4c87df',},
-            headerTintColor: '#fff',             
-            headerTitleStyle: {fontWeight: 'bold',},
-            headerBackTitle: 'back', 
-            }} />
-
+          }}
+        />
+        <Stack.Screen
+          name="index"
+          options={{
+            title: 'Sign In',
+            headerShown: true,
+            headerStyle: { backgroundColor: '#4c87df' },
+            headerTintColor: '#fff',
+            headerTitleStyle: { fontWeight: 'bold' },
+            headerBackTitle: 'back',
+          }}
+          />
+          <Stack.Screen
+          name="[id]"
+          options={{
+            headerTitle: '',
+            headerShown: true,
+            headerStyle: { backgroundColor: '#4c87df' },
+            headerTintColor: '#fff',
+            headerTitleStyle: { fontWeight: 'bold' },
+            headerBackTitle: 'back',
+          }}
+        />
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style="auto" />

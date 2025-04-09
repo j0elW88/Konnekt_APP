@@ -1,12 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Alert,
-  ActivityIndicator,
-} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as Location from 'expo-location';
 
@@ -25,8 +18,6 @@ type Club = {
   admins: string[];
 };
 
-
-
 export default function ClubDetailScreen() {
   useAuthRedirect();
   const { id } = useLocalSearchParams();
@@ -34,53 +25,75 @@ export default function ClubDetailScreen() {
 
   const [club, setClub] = useState<Club | null>(null);
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
-  const [loading, setLoading] = useState(false);
-
-  const fetchClub = async () => {
-    try {
-      const clubId = Array.isArray(id) ? id[0] : id;
-      const response = await fetch(`http://${IP_ADDRESS}:5000/api/clubs/${clubId}`);
-      const data = await response.json();
-      setClub(data);
-    } catch (err) {
-      console.error("Failed to fetch club:", err);
-      Alert.alert("Error", "Could not load club info.");
-    }
-  };
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (id) fetchClub();
+    console.log("🔎 Club ID from URL:", id);
+    if (!id || typeof id !== 'string') {
+      Alert.alert("Error", "Invalid club ID.");
+      return;
+    }
+
+    const fetchClub = async () => {
+      try {
+        console.log("🌐 Fetching club from backend...");
+        const response = await fetch(`http://${IP_ADDRESS}:5000/api/clubs/${id}`);
+        const data = await response.json();
+
+        console.log("📦 Club data received:", data);
+
+        if (response.ok) {
+          setClub(data);
+        } else {
+          Alert.alert("Error", data.error || "Club not found.");
+        }
+      } catch (err) {
+        console.error("❌ Failed to fetch club:", err);
+        Alert.alert("Error", "Could not load club info.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchClub();
   }, [id]);
 
   const handleCheckIn = async () => {
     console.log("📍 Location button clicked");
     setLoading(true);
 
-    let { status } = await Location.requestForegroundPermissionsAsync();
+    const { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Please Enable Location Sharing', 'Location permission is required.');
+      Alert.alert('Permission Needed', 'Enable location sharing to check in.');
       setLoading(false);
       return;
     }
 
     try {
-      let loc = await Location.getCurrentPositionAsync({});
+      const loc = await Location.getCurrentPositionAsync({});
       setLocation(loc);
     } catch (err) {
-      console.error("Location fetch error:", err);
-      Alert.alert("Error", "Unable to retrieve location.");
+      console.error("❌ Location fetch error:", err);
+      Alert.alert("Error", "Could not retrieve your location.");
     } finally {
       setLoading(false);
     }
   };
 
-  if (!club) {
+  if (loading) {
     return <ActivityIndicator size="large" color="#4c87df" style={{ marginTop: 50 }} />;
   }
 
-  const currentUserId = global.authUser?._id ?? '';
-  const isAdmin = club.admins?.includes(currentUserId);
-  const isOwner = club.owner === currentUserId;
+  if (!club) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.title}>❌ Club Not Found</Text>
+      </View>
+    );
+  }
+
+  const isAdmin = club.admins?.includes(global.authUser?._id ?? '');
+  const isOwner = club.owner === global.authUser?._id;
 
   return (
     <View style={styles.container}>
@@ -99,7 +112,7 @@ export default function ClubDetailScreen() {
 
       <ClubMembersPanel
         clubId={club._id}
-        currentUserId={currentUserId}
+        currentUserId={global.authUser?._id ?? ''}
         isAdmin={isAdmin}
         isOwner={isOwner}
       />
