@@ -16,6 +16,11 @@ type Club = {
   useLocationTracking: boolean;
   owner: string;
   admins: string[];
+  isPublic: boolean;
+  checkInCoords?: {
+    latitude: number;
+    longitude: number;
+  };
 };
 
 export default function ClubDetailScreen() {
@@ -26,9 +31,9 @@ export default function ClubDetailScreen() {
   const [club, setClub] = useState<Club | null>(null);
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
   const [loading, setLoading] = useState(true);
+  const [joinCode, setJoinCode] = useState<string | null>(null);
 
   useEffect(() => {
-    console.log("🔎 Club ID from URL:", id);
     if (!id || typeof id !== 'string') {
       Alert.alert("Error", "Invalid club ID.");
       return;
@@ -36,12 +41,8 @@ export default function ClubDetailScreen() {
 
     const fetchClub = async () => {
       try {
-        console.log("🌐 Fetching club from backend...");
         const response = await fetch(`http://${IP_ADDRESS}:5000/api/clubs/${id}`);
         const data = await response.json();
-
-        console.log("📦 Club data received:", data);
-
         if (response.ok) {
           setClub(data);
         } else {
@@ -58,8 +59,24 @@ export default function ClubDetailScreen() {
     fetchClub();
   }, [id]);
 
+  useEffect(() => {
+    const fetchJoinCode = async () => {
+      if (!club) return;
+      try {
+        const res = await fetch(`http://${IP_ADDRESS}:5000/api/clubs/${club._id}/join-code?userId=${global.authUser?._id}`);
+        const data = await res.json();
+        if (data.joinCode) {
+          setJoinCode(data.joinCode);
+        }
+      } catch (err) {
+        console.error("Failed to fetch join code:", err);
+      }
+    };
+
+    fetchJoinCode();
+  }, [club]);
+
   const handleCheckIn = async () => {
-    console.log("📍 Location button clicked");
     setLoading(true);
 
     const { status } = await Location.requestForegroundPermissionsAsync();
@@ -77,6 +94,37 @@ export default function ClubDetailScreen() {
       Alert.alert("Error", "Could not retrieve your location.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSetLocation = async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert("Permission Denied", "Location permission is required.");
+        return;
+      }
+
+      const coords = await Location.getCurrentPositionAsync({});
+      const res = await fetch(`http://${IP_ADDRESS}:5000/api/clubs/${id}/location`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: global.authUser?._id,
+          lat: coords.coords.latitude,
+          lon: coords.coords.longitude
+        })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        Alert.alert("Success", "Check-in location updated!");
+        setClub(prev => prev ? { ...prev, checkInCoords: data.checkInCoords } : prev);
+      } else {
+        Alert.alert("Error", data.error || "Failed to set location.");
+      }
+    } catch (err) {
+      console.error("Error setting location:", err);
+      Alert.alert("Error", "Could not update location.");
     }
   };
 
@@ -100,15 +148,34 @@ export default function ClubDetailScreen() {
       <Text style={styles.title}>{club.name}</Text>
       <Text style={styles.subtitle}>{club.description}</Text>
 
-      {loading ? (
-        <ActivityIndicator size="large" color="#4c87df" style={{ marginTop: 20 }} />
-      ) : (
-        <TouchableOpacity style={styles.button} onPress={handleCheckIn}>
-          <Text style={styles.buttonText}>Check In with Location</Text>
+      {joinCode && (
+        <View style={styles.joinCodeBox}>
+          <Text style={styles.joinCodeLabel}>Join Code:</Text>
+          <Text selectable style={styles.joinCode}>{joinCode}</Text>
+        </View>
+      )}
+
+      <Text style={styles.statusText}>
+        📍 Location Check-In is {club.useLocationTracking ? 'enabled ✅' : 'disabled ❌'}
+      </Text>
+
+      {(isAdmin || isOwner) && (
+        <TouchableOpacity style={styles.setLocButton} onPress={handleSetLocation}>
+          <Text style={styles.buttonText}>📍 Set Club Check-in Location</Text>
         </TouchableOpacity>
       )}
 
-      {location && <ProximityChecker anchor={location} />}
+      {!loading && (
+        <TouchableOpacity style={styles.button} onPress={handleCheckIn}>
+          <Text style={styles.buttonText}>
+            {club.useLocationTracking ? 'Check In with Location' : 'Check In'}
+          </Text>
+        </TouchableOpacity>
+      )}
+
+      {location && club.useLocationTracking && club.checkInCoords && (
+        <ProximityChecker anchor={club.checkInCoords} />
+      )}
 
       <ClubMembersPanel
         clubId={club._id}
@@ -150,5 +217,33 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '600',
     fontSize: 16,
+  },
+  joinCodeBox: {
+    backgroundColor: '#fff',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 20,
+    alignItems: 'center',
+  },
+  joinCodeLabel: {
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  joinCode: {
+    fontSize: 18,
+    letterSpacing: 1.5,
+  },
+  setLocButton: {
+    backgroundColor: '#2e7d32',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    marginBottom: 10,
+  },
+  statusText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 10,
   },
 });

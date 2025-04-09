@@ -1,6 +1,15 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Modal,
+  Pressable,
+  FlatList
+} from 'react-native';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 
 type Club = {
   _id: string;
@@ -10,13 +19,20 @@ type Club = {
 
 type HomepageProps = {
   clubs: Club[];
+  onLeaveClub: (clubId: string, clubName: string) => void;
 };
 
-export default function Homepage({ clubs }: HomepageProps) {
+export default function Homepage({ clubs, onLeaveClub }: HomepageProps) {
   const router = useRouter();
+  const [modalVisible, setModalVisible] = useState(false);
 
   return (
     <View style={styles.container}>
+      {/* Dropdown icon */}
+      <TouchableOpacity style={styles.menuIcon} onPress={() => setModalVisible(true)}>
+        <Ionicons name="ellipsis-vertical" size={24} color="#333" />
+      </TouchableOpacity>
+
       <Text style={styles.heading}>Your Clubs</Text>
 
       {clubs.map((club) => (
@@ -42,6 +58,39 @@ export default function Homepage({ clubs }: HomepageProps) {
       >
         <Text style={styles.createButtonText}>+ Create New Club</Text>
       </TouchableOpacity>
+
+      {/* Modal for leaving a club */}
+      <Modal
+        visible={modalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Leave a Club</Text>
+            <FlatList
+              data={clubs}
+              keyExtractor={(item) => item._id}
+              renderItem={({ item }) => (
+                <Pressable
+                  style={styles.leaveOption}
+                  onPress={() => {
+                    console.log("✅ Leave option tapped:", item.name);
+                    onLeaveClub(item._id, item.name);
+                    setModalVisible(false);
+                  }}
+                >
+                  <Text style={styles.leaveOptionText}>Leave {item.name}</Text>
+                </Pressable>
+              )}
+            />
+            <TouchableOpacity style={styles.cancelButton} onPress={() => setModalVisible(false)}>
+              <Text style={styles.cancelText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -49,6 +98,7 @@ export default function Homepage({ clubs }: HomepageProps) {
 const styles = StyleSheet.create({
   container: {
     padding: 20,
+    paddingTop: 80,
     backgroundColor: "#f4f6fc",
     flex: 1,
   },
@@ -81,5 +131,48 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "bold",
+  },
+  menuIcon: {
+    position: 'absolute',
+    top: 40,
+    right: 20,
+    zIndex: 20,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: '#000000aa',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  modalContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 20,
+    maxHeight: '80%',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  leaveOption: {
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
+  },
+  leaveOptionText: {
+    fontSize: 16,
+  },
+  cancelButton: {
+    marginTop: 12,
+    backgroundColor: '#aaa',
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  cancelText: {
+    color: 'white',
+    fontWeight: 'bold',
   },
 });

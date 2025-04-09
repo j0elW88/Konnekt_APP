@@ -157,12 +157,17 @@ router.delete('/:id', async (req, res) => {
     res.status(500).json({ error: 'Failed to delete club' });
   }
 });
-
 // LEAVE CLUB
 router.patch('/:id/leave', async (req, res) => {
   try {
+    const { id: clubId } = req.params;
     const { userId } = req.body;
-    const club = await Club.findById(req.params.id);
+
+    if (!userId) {
+      return res.status(400).json({ error: 'Missing userId' });
+    }
+
+    const club = await Club.findById(clubId);
     const user = await User.findById(userId);
 
     if (!club || !user) {
@@ -172,29 +177,38 @@ router.patch('/:id/leave', async (req, res) => {
     const isOwner = club.owner.toString() === userId;
     const isOnlyMember = club.members.length === 1;
 
+    // If owner and only member — delete club
     if (isOwner && isOnlyMember) {
       await club.deleteOne();
       await User.findByIdAndUpdate(userId, { $pull: { clubs: club._id } });
-      return res.json({ message: 'Club deleted by owner (only member)', deleted: true });
+
+      return res.json({
+        message: 'Owner deleted the club (only member)',
+        deleted: true
+      });
     }
 
-    // Remove user from all arrays
+    // If user is not a member, reject
+    if (!club.members.map(m => m.toString()).includes(userId)) {
+      return res.status(400).json({ error: 'User is not a member of this club' });
+    }
+
+    // Remove from members/admins/pending if they exist
     club.members = club.members.filter(id => id.toString() !== userId);
-    club.admins = club.admins.filter(id => id.toString() !== userId);
-    club.pending = club.pending.filter(id => id.toString() !== userId);
+    club.admins = (club.admins || []).filter(id => id.toString() !== userId);
+    club.pending = (club.pending || []).filter(id => id.toString() !== userId);
+
     await club.save();
 
-    // Remove club from user
-    user.clubs = user.clubs.filter(id => id.toString() !== club._id.toString());
-    await user.save();
+    // Remove club from user doc
+    await User.findByIdAndUpdate(userId, { $pull: { clubs: club._id } });
 
     res.json({ message: 'Left club successfully', deleted: false });
   } catch (err) {
-    console.error('Leave club error:', err);
-    res.status(500).json({ error: 'Failed to leave club' });
+    console.error("❌ Leave club error:", err);
+    res.status(500).json({ error: 'Server error leaving club' });
   }
 });
-
 
 
 // Get public clubs
@@ -206,6 +220,33 @@ router.get('/public', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch public clubs' });
   }
 });
+
+// Join by Code
+router.get('/:id/join-code', async (req, res) => {
+  try {
+    const club = await Club.findById(req.params.id);
+    const { userId } = req.query;
+
+    if (!club || !userId) {
+      return res.status(400).json({ error: 'Missing club or userId' });
+    }
+
+    const isAdmin = club.admins.map(id => id.toString()).includes(userId.toString());
+    const isOwner = club.owner.toString() === userId.toString();
+
+    if (!club.isPublic && !isAdmin && !isOwner) {
+      return res.status(403).json({ error: 'Not authorized to view join code' });
+    }
+
+    res.json({ joinCode: club.joinCode });
+  } catch (err) {
+    console.error("❌ Fetch join code error:", err);
+    res.status(500).json({ error: 'Failed to retrieve join code' });
+  }
+});
+
+
+
 
 // Reset join code
 router.patch('/:id/join-code/reset', async (req, res) => {
@@ -241,5 +282,32 @@ router.get('/:id', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch club data' });
   }
 });
+
+//set check-in coordinates (admins and owners only)
+// Set check-in coordinates (admins/owner only)
+router.patch('/:id/location', async (req, res) => {
+  try {
+    const { userId, lat, lon } = req.body;
+    const club = await Club.findById(req.params.id);
+
+    if (!club) return res.status(404).json({ error: 'Club not found' });
+
+    const isAdmin = club.admins.map(id => id.toString()).includes(userId.toString());
+    const isOwner = club.owner.toString() === userId.toString();
+
+    if (!isAdmin && !isOwner) {
+      return res.status(403).json({ error: 'Not authorized to set location' });
+    }
+
+    club.checkInCoords = { lat, lon };
+    await club.save();
+
+    res.json({ message: 'Location updated', checkInCoords: club.checkInCoords });
+  } catch (err) {
+    console.error("Failed to update club location:", err);
+    res.status(500).json({ error: 'Server error updating location' });
+  }
+});
+
 
 module.exports = router;

@@ -3,7 +3,10 @@ import { View, Text, StyleSheet } from 'react-native';
 import * as Location from 'expo-location';
 
 interface Props {
-  anchor: Location.LocationObject;
+  anchor: {
+    latitude: number;
+    longitude: number;
+  };
 }
 
 export default function ProximityChecker({ anchor }: Props) {
@@ -37,8 +40,8 @@ export default function ProximityChecker({ anchor }: Props) {
         setCurrentLoc(loc);
 
         const dist = getDistance(
-          anchor.coords.latitude,
-          anchor.coords.longitude,
+          anchor.latitude,
+          anchor.longitude,
           loc.coords.latitude,
           loc.coords.longitude
         );
