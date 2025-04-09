@@ -8,6 +8,9 @@ import {
   Alert,
 } from 'react-native';
 import { IP_ADDRESS } from '../../src/components/config/globalvariables';
+import useAuthRedirect from "../../src/hooks/useAuthRedirect"; //send back to index if signed out
+
+
 
 type Club = {
   _id: string;
@@ -16,6 +19,7 @@ type Club = {
 };
 
 export default function DiscoverClubs() {
+  useAuthRedirect();
   const [clubs, setClubs] = useState<Club[]>([]);
   const [joinedClubs, setJoinedClubs] = useState<string[]>([]);
 

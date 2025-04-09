@@ -7,9 +7,13 @@ interface Props {
     latitude: number;
     longitude: number;
   };
+  center?: {
+    latitude: number;
+    longitude: number;
+  };
 }
 
-export default function ProximityChecker({ anchor }: Props) {
+export default function ProximityChecker({ anchor, center }: Props) {
   const [currentLoc, setCurrentLoc] = useState<Location.LocationObject | null>(null);
   const [distance, setDistance] = useState<number | null>(null);
   const radius = 25; // feet

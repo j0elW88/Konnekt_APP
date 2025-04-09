@@ -245,10 +245,56 @@ router.get('/:id/join-code', async (req, res) => {
   }
 });
 
+//private clubs pending join route
+router.post('/:id/join', async (req, res) => {
+  try {
+    const { userId } = req.body;
+    const club = await Club.findById(req.params.id);
+    const user = await User.findById(userId);
+
+    if (!club || !user) {
+      return res.status(404).json({ error: 'Club or user not found' });
+    }
+
+    if (club.members.includes(userId)) {
+      return res.status(400).json({ error: 'You are already a member of this club' });
+    }
+
+    if (club.isPublic) {
+      club.members.push(userId);
+      user.clubs.push(club._id);
+      await club.save();
+      await user.save();
+      return res.json({ message: 'Joined public club successfully', club });
+    } else {
+      if (!club.pending.includes(userId)) {
+        club.pending.push(userId);
+        await club.save();
+        return res.json({ message: 'Join request sent. Awaiting approval.' });
+      } else {
+        return res.status(400).json({ error: 'Join request already pending' });
+      }
+    }
+  } catch (err) {
+    console.error("Join failed:", err);
+    res.status(500).json({ error: 'Join failed (server error)' });
+  }
+});
+
+// ✅ Get pending users (for AdminDropdownPanel)
+router.get('/:id/pending', async (req, res) => {
+  try {
+    const club = await Club.findById(req.params.id).populate('pending', 'username full_name');
+    if (!club) return res.status(404).json({ error: 'Club not found' });
+    res.json(club.pending);
+  } catch (err) {
+    console.error("Fetch pending failed:", err);
+    res.status(500).json({ error: 'Could not fetch pending users' });
+  }
+});
 
 
-
-// Reset join code
+//reset join code
 router.patch('/:id/join-code/reset', async (req, res) => {
   try {
     const club = await Club.findById(req.params.id);
@@ -268,7 +314,7 @@ router.patch('/:id/join-code/reset', async (req, res) => {
   }
 });
 
-// Get single club by ID
+//get single club by ID
 router.get('/:id', async (req, res) => {
   try {
     const club = await Club.findById(req.params.id)
@@ -284,7 +330,6 @@ router.get('/:id', async (req, res) => {
 });
 
 //set check-in coordinates (admins and owners only)
-// Set check-in coordinates (admins/owner only)
 router.patch('/:id/location', async (req, res) => {
   try {
     const { userId, lat, lon } = req.body;

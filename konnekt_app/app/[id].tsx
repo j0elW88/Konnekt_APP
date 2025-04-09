@@ -14,8 +14,8 @@ type Club = {
   description: string;
   color: string;
   useLocationTracking: boolean;
-  owner: string;
-  admins: string[];
+  owner: string; // now a username
+  admins: string[]; // usernames
   isPublic: boolean;
   checkInCoords?: {
     latitude: number;
@@ -31,7 +31,6 @@ export default function ClubDetailScreen() {
   const [club, setClub] = useState<Club | null>(null);
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
   const [loading, setLoading] = useState(true);
-  const [joinCode, setJoinCode] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id || typeof id !== 'string') {
@@ -58,23 +57,6 @@ export default function ClubDetailScreen() {
 
     fetchClub();
   }, [id]);
-
-  useEffect(() => {
-    const fetchJoinCode = async () => {
-      if (!club) return;
-      try {
-        const res = await fetch(`http://${IP_ADDRESS}:5000/api/clubs/${club._id}/join-code?userId=${global.authUser?._id}`);
-        const data = await res.json();
-        if (data.joinCode) {
-          setJoinCode(data.joinCode);
-        }
-      } catch (err) {
-        console.error("Failed to fetch join code:", err);
-      }
-    };
-
-    fetchJoinCode();
-  }, [club]);
 
   const handleCheckIn = async () => {
     setLoading(true);
@@ -128,50 +110,36 @@ export default function ClubDetailScreen() {
     }
   };
 
-  if (loading) {
+  if (loading || !club) {
     return <ActivityIndicator size="large" color="#4c87df" style={{ marginTop: 50 }} />;
   }
 
-  if (!club) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.title}>❌ Club Not Found</Text>
-      </View>
-    );
-  }
-
-  const isAdmin = club.admins?.includes(global.authUser?._id ?? '');
-  const isOwner = club.owner === global.authUser?._id;
+  const isAdmin = club.admins.includes(global.authUser?.username ?? '');
+  const isOwner = club.owner === global.authUser?.username;
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>{club.name}</Text>
       <Text style={styles.subtitle}>{club.description}</Text>
 
-      {joinCode && (
-        <View style={styles.joinCodeBox}>
-          <Text style={styles.joinCodeLabel}>Join Code:</Text>
-          <Text selectable style={styles.joinCode}>{joinCode}</Text>
-        </View>
-      )}
-
       <Text style={styles.statusText}>
         📍 Location Check-In is {club.useLocationTracking ? 'enabled ✅' : 'disabled ❌'}
       </Text>
 
       {(isAdmin || isOwner) && (
-        <TouchableOpacity style={styles.setLocButton} onPress={handleSetLocation}>
-          <Text style={styles.buttonText}>📍 Set Club Check-in Location</Text>
+        <TouchableOpacity
+          style={styles.setLocButton}
+          onPress={() => router.push({ pathname: '/admin-panel', params: { id: club._id } })}
+        >
+          <Text style={styles.buttonText}>Admin Settings</Text>
         </TouchableOpacity>
       )}
 
-      {!loading && (
-        <TouchableOpacity style={styles.button} onPress={handleCheckIn}>
-          <Text style={styles.buttonText}>
-            {club.useLocationTracking ? 'Check In with Location' : 'Check In'}
-          </Text>
-        </TouchableOpacity>
-      )}
+      <TouchableOpacity style={styles.button} onPress={handleCheckIn}>
+        <Text style={styles.buttonText}>
+          {club.useLocationTracking ? 'Check In with Location' : 'Check In'}
+        </Text>
+      </TouchableOpacity>
 
       {location && club.useLocationTracking && club.checkInCoords && (
         <ProximityChecker anchor={club.checkInCoords} />
@@ -179,7 +147,7 @@ export default function ClubDetailScreen() {
 
       <ClubMembersPanel
         clubId={club._id}
-        currentUserId={global.authUser?._id ?? ''}
+        currentUserId={global.authUser?.username ?? ''}
         isAdmin={isAdmin}
         isOwner={isOwner}
       />
@@ -213,32 +181,17 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginTop: 20,
   },
-  buttonText: {
-    color: '#fff',
-    fontWeight: '600',
-    fontSize: 16,
-  },
-  joinCodeBox: {
-    backgroundColor: '#fff',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 20,
-    alignItems: 'center',
-  },
-  joinCodeLabel: {
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  joinCode: {
-    fontSize: 18,
-    letterSpacing: 1.5,
-  },
   setLocButton: {
     backgroundColor: '#2e7d32',
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 8,
     marginBottom: 10,
+  },
+  buttonText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 16,
   },
   statusText: {
     fontSize: 14,
