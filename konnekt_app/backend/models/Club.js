@@ -9,7 +9,7 @@ const ClubSchema = new mongoose.Schema({
   color: { type: String, default: "#A1B5D8" },
   description: { type: String, default: "" },
   imageUrl: { type: String, default: "" },
-  useLocation: { type: Boolean, default: false },
+  useLocationTracking: { type: Boolean, default: false },
   ownerId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   admins: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   members: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],

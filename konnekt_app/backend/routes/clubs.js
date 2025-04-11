@@ -74,6 +74,8 @@ router.patch('/:id/approve/:userId', async (req, res) => {
     const club = await Club.findById(req.params.id);
     const userId = req.params.userId;
 
+    if (!club || !userId) return res.status(400).json({ error: 'Club or userId missing' });
+
     if (!club.pending.includes(userId)) {
       return res.status(400).json({ error: 'User not pending' });
     }
@@ -83,12 +85,52 @@ router.patch('/:id/approve/:userId', async (req, res) => {
 
     await club.save();
     await User.findByIdAndUpdate(userId, {
-      $push: { clubs: club._id }
+      $addToSet: { clubs: club._id }
     });
 
     res.json({ message: 'User approved' });
   } catch (err) {
+    console.error('Approval error:', err);
     res.status(500).json({ error: 'Approval failed' });
+  }
+});
+
+// Reject user 
+router.patch('/:id/reject/:userId', async (req, res) => {
+  try {
+    const club = await Club.findById(req.params.id);
+    const userId = req.params.userId;
+
+    if (!club || !userId) return res.status(400).json({ error: 'Club or userId missing' });
+
+    if (!club.pending.includes(userId)) {
+      return res.status(400).json({ error: 'User not in pending list' });
+    }
+
+    club.pending = club.pending.filter(id => id.toString() !== userId);
+    await club.save();
+
+    res.json({ message: 'User rejected' });
+  } catch (err) {
+    console.error('Rejection error:', err);
+    res.status(500).json({ error: 'Rejection failed' });
+  }
+});
+
+// Get full club with populated pending
+router.get('/:id', async (req, res) => {
+  try {
+    const club = await Club.findById(req.params.id)
+      .populate('owner admins members pending', 'username full_name');
+
+    if (!club) {
+      return res.status(404).json({ error: 'Club not found' });
+    }
+
+    res.json(club);
+  } catch (err) {
+    console.error('Error fetching club:', err);
+    res.status(500).json({ error: 'Failed to fetch club data' });
   }
 });
 
@@ -221,29 +263,45 @@ router.get('/public', async (req, res) => {
   }
 });
 
-// Join by Code
-router.get('/:id/join-code', async (req, res) => {
+// Join club by join code
+router.post('/join-code/:code', async (req, res) => {
   try {
-    const club = await Club.findById(req.params.id);
-    const { userId } = req.query;
+    const { code } = req.params;
+    const { userId } = req.body;
 
-    if (!club || !userId) {
-      return res.status(400).json({ error: 'Missing club or userId' });
+    const club = await Club.findOne({ joinCode: code });
+    const user = await User.findById(userId);
+
+    if (!club || !user) {
+      return res.status(404).json({ error: 'Club or user not found' });
     }
 
-    const isAdmin = club.admins.map(id => id.toString()).includes(userId.toString());
-    const isOwner = club.owner.toString() === userId.toString();
-
-    if (!club.isPublic && !isAdmin && !isOwner) {
-      return res.status(403).json({ error: 'Not authorized to view join code' });
+    if (club.members.includes(userId)) {
+      return res.status(400).json({ error: 'Already a member' });
     }
 
-    res.json({ joinCode: club.joinCode });
+    if (club.pending.includes(userId)) {
+      return res.status(400).json({ error: 'Request already pending' });
+    }
+
+    if (club.isPublic) {
+      club.members.push(userId);
+      user.clubs.push(club._id);
+      await club.save();
+      await user.save();
+      return res.json({ message: 'Joined public club' });
+    } else {
+      club.pending.push(userId);
+      await club.save();
+      return res.json({ message: 'Join request sent for private club' });
+    }
+
   } catch (err) {
-    console.error("❌ Fetch join code error:", err);
-    res.status(500).json({ error: 'Failed to retrieve join code' });
+    console.error("Join by code failed:", err);
+    res.status(500).json({ error: 'Server error joining club' });
   }
 });
+
 
 //private clubs pending join route
 router.post('/:id/join', async (req, res) => {
@@ -281,7 +339,7 @@ router.post('/:id/join', async (req, res) => {
   }
 });
 
-// ✅ Get pending users (for AdminDropdownPanel)
+// Get pending users (for AdminDropdownPanel)
 router.get('/:id/pending', async (req, res) => {
   try {
     const club = await Club.findById(req.params.id).populate('pending', 'username full_name');
@@ -353,6 +411,29 @@ router.patch('/:id/location', async (req, res) => {
     res.status(500).json({ error: 'Server error updating location' });
   }
 });
+
+// Kick a member
+router.patch('/:id/kick/:userId', async (req, res) => {
+  try {
+    const club = await Club.findById(req.params.id);
+    const userId = req.params.userId;
+
+    if (!club) return res.status(404).json({ error: 'Club not found' });
+
+    club.members = club.members.filter(id => id.toString() !== userId);
+    club.admins = club.admins.filter(id => id.toString() !== userId);
+    club.pending = club.pending.filter(id => id.toString() !== userId);
+
+    await club.save();
+    await User.findByIdAndUpdate(userId, { $pull: { clubs: club._id } });
+
+    res.json({ message: 'User kicked' });
+  } catch (err) {
+    console.error('Kick failed:', err);
+    res.status(500).json({ error: 'Kick failed' });
+  }
+});
+
 
 
 module.exports = router;

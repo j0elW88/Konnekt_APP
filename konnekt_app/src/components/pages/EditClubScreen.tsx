@@ -1,8 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, Switch, StyleSheet, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, Switch, StyleSheet, TouchableOpacity, Alert, ActivityIndicator, ScrollView } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import ClubMembersPanel from './ClubMembersPanel';
 import { IP_ADDRESS } from '../config/globalvariables';
+
+type User = {
+  _id: string;
+  username: string;
+  full_name: string;
+};
 
 type Club = {
   _id: string;
@@ -13,6 +18,8 @@ type Club = {
   isPublic: boolean;
   joinCode: string;
   admins: string[];
+  pending: User[];
+  members: User[];
 };
 
 export default function EditClubScreen() {
@@ -21,21 +28,19 @@ export default function EditClubScreen() {
 
   const [club, setClub] = useState<Club | null>(null);
   const [loading, setLoading] = useState(false);
-  const isAdmin = club?.admins?.includes(global.authUser?._id ?? '');
 
+  const fetchClub = async () => {
+    try {
+      const response = await fetch(`http://${IP_ADDRESS}:5000/api/clubs/${id}`);
+      const data = await response.json();
+      setClub(data);
+    } catch (err) {
+      console.error("Failed to fetch club:", err);
+      Alert.alert("Error", "Could not load club info.");
+    }
+  };
 
   useEffect(() => {
-    const fetchClub = async () => {
-      try {
-        const response = await fetch(`http://${IP_ADDRESS}:5000/api/clubs/${id}`);
-        const data = await response.json();
-        setClub(data);
-      } catch (err) {
-        console.error("Failed to fetch club:", err);
-        Alert.alert("Error", "Could not load club info.");
-      }
-    };
-
     if (id) fetchClub();
   }, [id]);
 
@@ -90,12 +95,35 @@ export default function EditClubScreen() {
     }
   };
 
+  const handleApproval = async (userId: string, approve: boolean) => {
+    if (!club) return;
+    const endpoint = approve ? 'approve' : 'reject';
+
+    try {
+      const res = await fetch(`http://${IP_ADDRESS}:5000/api/clubs/${club._id}/${endpoint}/${userId}`, {
+        method: 'PATCH',
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        Alert.alert("Success", `User ${approve ? 'approved' : 'rejected'}`);
+        fetchClub(); // Refresh UI
+      } else {
+        Alert.alert("Error", data.error || "Failed to update user status.");
+      }
+    } catch (err) {
+      Alert.alert("Error", "Could not update user status.");
+      console.error("❌ Approval error:", err);
+    }
+  };
+
   if (!club) {
     return <ActivityIndicator size="large" color="#4c87df" style={{ marginTop: 50 }} />;
   }
 
   return (
-    <View style={styles.container}>
+    <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
       <Text style={styles.heading}>Edit Club</Text>
 
       <Text style={styles.label}>Name</Text>
@@ -107,7 +135,7 @@ export default function EditClubScreen() {
 
       <Text style={styles.label}>Description</Text>
       <TextInput
-        style={[styles.input, { height: 80 }]}
+        style={[styles.input, styles.descriptionBox]}
         multiline
         value={club.description}
         onChangeText={(text) => setClub({ ...club, description: text })}
@@ -136,16 +164,33 @@ export default function EditClubScreen() {
         />
       </View>
 
-      {isAdmin && (
-        <View style={{ marginBottom: 24 }}>
-          <Text style={styles.label}>Join Code</Text>
-          <Text style={styles.joinCode}>{club.joinCode}</Text>
-          <TouchableOpacity
-            style={[styles.button, { backgroundColor: '#666', marginTop: 10 }]}
-            onPress={handleRegenerateJoinCode}
-          >
-            <Text style={styles.buttonText}>Regenerate Join Code</Text>
-          </TouchableOpacity>
+      <View style={{ marginBottom: 24 }}>
+        <Text style={styles.label}>Join Code</Text>
+        <Text style={styles.joinCode}>{club.joinCode}</Text>
+        <TouchableOpacity
+          style={[styles.button, { backgroundColor: '#666', marginTop: 10 }]}
+          onPress={handleRegenerateJoinCode}
+        >
+          <Text style={styles.buttonText}>Regenerate Join Code</Text>
+        </TouchableOpacity>
+      </View>
+
+      {club.pending?.length > 0 && (
+        <View style={{ marginTop: 20 }}>
+          <Text style={styles.label}>Pending Members</Text>
+          {club.pending.map((user) => (
+            <View key={String(user._id)} style={styles.userRow}>
+              <Text style={styles.userName}>{user.full_name || user.username || "Unnamed"}</Text>
+              <View style={styles.approvalButtons}>
+                <TouchableOpacity onPress={() => user._id && handleApproval(user._id, true)}>
+                  <Text style={styles.approveText}>✅</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => user._id && handleApproval(user._id, false)}>
+                  <Text style={styles.rejectText}>❌</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          ))}
         </View>
       )}
 
@@ -154,7 +199,7 @@ export default function EditClubScreen() {
           {loading ? "Saving..." : "Save Changes"}
         </Text>
       </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 }
 
@@ -162,7 +207,7 @@ const styles = StyleSheet.create({
   container: {
     padding: 20,
     backgroundColor: "#f4f6fc",
-    flex: 1,
+    paddingBottom: 80,
   },
   heading: {
     fontSize: 22,
@@ -183,6 +228,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#ddd",
   },
+  descriptionBox: {
+    minHeight: 80,
+    textAlignVertical: 'top',
+  },
   row: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -200,10 +249,34 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 8,
     alignItems: "center",
+    marginTop: 24,
   },
   buttonText: {
     color: "#fff",
     fontWeight: "600",
     fontSize: 16,
+  },
+  userRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 6,
+    width: '100%',
+  },
+  userName: {
+    flex: 1,
+    fontSize: 16,
+    color: '#333',
+  },
+  approvalButtons: {
+    flexDirection: 'row',
+    gap: 12,
+    marginLeft: 12,
+  },
+  approveText: {
+    fontSize: 20,
+  },
+  rejectText: {
+    fontSize: 20,
+    marginLeft: 10,
   },
 });

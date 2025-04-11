@@ -10,22 +10,38 @@ export default function JoinClubScreen() {
   const handleJoin = async () => {
     if (!code.trim()) return Alert.alert("Enter a valid code");
 
+    const userId = global.authUser?._id;
+    console.log("🚀 Join code submitted:", code, "User ID:", userId);
+
+    if (!userId) {
+      Alert.alert("Error", "User not signed in.");
+      return;
+    }
+
     try {
       const response = await fetch(`http://${IP_ADDRESS}:5000/api/clubs/join-code/${code}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: global.authUser?._id }),
+        body: JSON.stringify({ userId }),
       });
 
       const data = await response.json();
+      console.log("📦 Join response:", JSON.stringify(data, null, 2));
 
       if (response.ok) {
-        Alert.alert("Success", "Request sent or joined if public.");
+        Alert.alert("Success", data.message || "Joined or request sent.");
+        setCode(''); // clear input
       } else {
-        Alert.alert("Error", data.error || "Invalid code");
+        if (data.error === "Request already pending") {
+          Alert.alert("Pending Request", "You've already requested to join this club. Please wait for approval.");
+        } else if (data.error === "Already a member") {
+          Alert.alert("Already Joined", "You're already a member of this club.");
+        } else {
+          Alert.alert("Error", data.error || "Invalid code or user.");
+        }
       }
     } catch (err) {
-      console.error(err);
+      console.error("❌ Network error:", err);
       Alert.alert("Error", "Could not join club");
     }
   };
