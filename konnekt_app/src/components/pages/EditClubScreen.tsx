@@ -27,6 +27,7 @@ export default function EditClubScreen() {
   const router = useRouter();
 
   const [club, setClub] = useState<Club | null>(null);
+  const [checkinCounts, setCheckinCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(false);
 
   const fetchClub = async () => {
@@ -40,8 +41,33 @@ export default function EditClubScreen() {
     }
   };
 
+  const fetchCheckinStats = async () => {
+    try {
+      const res = await fetch(`http://${IP_ADDRESS}:5000/api/checkin/club/${id}`);
+      const data = await res.json();
+
+      if (res.ok && Array.isArray(data)) {
+        const counts: Record<string, number> = {};
+        data.forEach(entry => {
+          const userId = entry.user?._id;
+          if (userId) {
+            counts[userId] = (counts[userId] || 0) + 1;
+          }
+        });
+        setCheckinCounts(counts);
+      } else {
+        console.warn("Unexpected check-in data:", data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch check-in stats:", err);
+    }
+  };
+
   useEffect(() => {
-    if (id) fetchClub();
+    if (id) {
+      fetchClub();
+      fetchCheckinStats();
+    }
   }, [id]);
 
   const handleUpdateClub = async () => {
@@ -108,7 +134,8 @@ export default function EditClubScreen() {
 
       if (res.ok) {
         Alert.alert("Success", `User ${approve ? 'approved' : 'rejected'}`);
-        fetchClub(); // Refresh UI
+        fetchClub();
+        fetchCheckinStats();
       } else {
         Alert.alert("Error", data.error || "Failed to update user status.");
       }
@@ -193,6 +220,18 @@ export default function EditClubScreen() {
           ))}
         </View>
       )}
+
+      <View style={{ marginTop: 30 }}>
+        <Text style={styles.label}>Approved Members</Text>
+        {club.members.map((user) => (
+          <View key={user._id} style={styles.userRow}>
+            <Text style={styles.userName}>
+              {user.full_name || user.username || 'Unknown'} —{' '}
+              <Text style={{ fontWeight: 'bold' }}>{checkinCounts[user._id] || 0} Meetings Attended</Text>
+            </Text>
+          </View>
+        ))}
+      </View>
 
       <TouchableOpacity style={styles.button} onPress={handleUpdateClub} disabled={loading}>
         <Text style={styles.buttonText}>

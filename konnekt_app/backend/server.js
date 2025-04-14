@@ -17,6 +17,9 @@ app.use("/api/clubs", clubRoutes);
 const PORT = process.env.PORT || 5000;
 const IP = process.env.IP_ADDRESS || "localhost";
 
+const checkinRoutes = require("./routes/checkin");
+app.use("/api/checkin", checkinRoutes);
+
 app.listen(PORT, () => {
   console.log(`🚀 Server running at http://${IP}:${PORT}`);
 });

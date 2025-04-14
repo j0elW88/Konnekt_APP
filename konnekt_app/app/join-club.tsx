@@ -6,6 +6,7 @@ import useAuthRedirect from '../src/hooks/useAuthRedirect';
 export default function JoinClubScreen() {
   useAuthRedirect();
   const [code, setCode] = useState('');
+  const [confirmationMsg, setConfirmationMsg] = useState('');
 
   const handleJoin = async () => {
     if (!code.trim()) return Alert.alert("Enter a valid code");
@@ -29,8 +30,13 @@ export default function JoinClubScreen() {
       console.log("📦 Join response:", JSON.stringify(data, null, 2));
 
       if (response.ok) {
-        Alert.alert("Success", data.message || "Joined or request sent.");
-        setCode(''); // clear input
+        const message = data.message?.toLowerCase().includes("request")
+          ? "✅ Join request sent successfully!"
+          : "✅ Joined club successfully!";
+        setConfirmationMsg(message);
+        setCode("");
+
+        setTimeout(() => setConfirmationMsg(""), 3000); // clear after 3s
       } else {
         if (data.error === "Request already pending") {
           Alert.alert("Pending Request", "You've already requested to join this club. Please wait for approval.");
@@ -49,6 +55,13 @@ export default function JoinClubScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Join a Club with a Code</Text>
+
+      {confirmationMsg !== '' && (
+        <View style={styles.confirmationBanner}>
+          <Text style={styles.confirmationText}>{confirmationMsg}</Text>
+        </View>
+      )}
+
       <TextInput
         style={styles.input}
         placeholder="Enter Join Code"
@@ -94,5 +107,16 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '600',
     fontSize: 16,
+  },
+  confirmationBanner: {
+    backgroundColor: '#d1e7dd',
+    padding: 10,
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+  confirmationText: {
+    color: '#0f5132',
+    fontWeight: '600',
+    textAlign: 'center',
   },
 });

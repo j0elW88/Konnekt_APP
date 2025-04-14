@@ -3,6 +3,24 @@ const router = express.Router();
 const Club = require('../models/Club');
 const User = require('../models/User');
 
+
+// Get public clubs
+router.get('/public', async (req, res) => {
+  try {
+    const clubs = await Club.find({ isPublic: true });
+
+    // ensure is an array
+    if (!Array.isArray(clubs)) {
+      return res.status(500).json({ error: 'Expected an array of public clubs' });
+    }
+
+    res.json(clubs);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch public clubs' });
+  }
+});
+
+
 // create club
 router.post('/create', async (req, res) => {
   try {
@@ -252,16 +270,6 @@ router.patch('/:id/leave', async (req, res) => {
   }
 });
 
-
-// Get public clubs
-router.get('/public', async (req, res) => {
-  try {
-    const clubs = await Club.find({ isPublic: true });
-    res.json(clubs);
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch public clubs' });
-  }
-});
 
 // Join club by join code
 router.post('/join-code/:code', async (req, res) => {

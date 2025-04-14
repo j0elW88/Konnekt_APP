@@ -23,15 +23,22 @@ export default function DiscoverClubs() {
   const [clubs, setClubs] = useState<Club[]>([]);
   const [joinedClubs, setJoinedClubs] = useState<string[]>([]);
 
-  const fetchClubs = async () => {
-    try {
-      const res = await fetch(`http://${IP_ADDRESS}:5000/api/clubs/public`);
-      const data = await res.json();
-      setClubs(data || []);
-    } catch (err) {
-      console.error('Failed to load public clubs:', err);
+const fetchClubs = async () => {
+  try {
+    const res = await fetch(`http://${IP_ADDRESS}:5000/api/clubs/public`);
+    const data = await res.json();
+    
+    if (Array.isArray(data)) {
+      setClubs(data);
+    } else {
+      console.warn("Expected array of clubs, got:", data);
+      setClubs([]); // prevent crash if malformed
     }
-  };
+  } catch (err) {
+    console.error('Failed to load public clubs:', err);
+    setClubs([]); // prevent crash if network error
+  }
+};
 
   const fetchUserClubs = async () => {
     if (!global.authUser || !global.authUser._id) return;
