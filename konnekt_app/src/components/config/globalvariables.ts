@@ -1,4 +1,4 @@
 
 //Declare Tester Necessary Info Here for Total Implementation Across Project!
 
-export const IP_ADDRESS = "10.2.1.60"; // Set your IP here
+export const IP_ADDRESS = "192.168.50.147"; // Set your IP here

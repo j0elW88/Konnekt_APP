@@ -51,7 +51,7 @@ export default function RootLayout() {
             headerTitleStyle: {fontWeight: 'bold',},
             headerBackTitle: 'back', 
             }} />
-
+        <Stack.Screen name="editprofileScreen" options={{ headerShown: false }} />
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style="auto" />
