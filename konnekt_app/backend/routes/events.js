@@ -52,4 +52,16 @@ router.get("/rsvped/:userId", async (req, res) => {
   }
 });
 
+// Get all events for a specific club
+router.get('/club/:clubId', async (req, res) => {
+  try {
+    const events = await Event.find({ clubId: req.params.clubId });
+    res.json(events);
+  } catch (err) {
+    console.error('Error fetching events:', err);
+    res.status(500).json({ msg: 'Server error' });
+  }
+});
+
+
 module.exports = router;

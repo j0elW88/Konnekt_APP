@@ -3,6 +3,7 @@ import { View, Text, TextInput, Switch, StyleSheet, TouchableOpacity, Alert, Act
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { IP_ADDRESS } from '../config/globalvariables';
 
+
 type User = {
   _id: string;
   username: string;
@@ -20,6 +21,7 @@ type Club = {
   admins: string[];
   pending: User[];
   members: User[];
+  owner: string;
 };
 
 export default function EditClubScreen() {
@@ -145,6 +147,41 @@ export default function EditClubScreen() {
     }
   };
 
+  const handleDeleteClub = async () => {
+    Alert.alert("Confirm", "Are you sure you want to delete this club?", [
+      {
+        text: "Cancel",
+        style: "cancel"
+      },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            const res = await fetch(`http://${IP_ADDRESS}:5000/api/clubs/${id}`, {
+              method: 'DELETE',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ userId: global.authUser?._id })
+            });
+
+            const data = await res.json();
+            if (res.ok) {
+              Alert.alert("Deleted", "Club deleted successfully.");
+              router.replace(`/(tabs)/homepage`);
+            } else {
+              Alert.alert("Error", data.error || "Could not delete club");
+            }
+          } catch (err) {
+            console.error("Delete error:", err);
+            Alert.alert("Error", "Server error");
+          }
+        }
+      }
+    ]);
+  };
+
+  const isAdmin = (userId: string) => club?.admins.includes(userId);
+
   if (!club) {
     return <ActivityIndicator size="large" color="#4c87df" style={{ marginTop: 50 }} />;
   }
@@ -226,7 +263,8 @@ export default function EditClubScreen() {
         {club.members.map((user) => (
           <View key={user._id} style={styles.userRow}>
             <Text style={styles.userName}>
-              {user.full_name || user.username || 'Unknown'} —{' '}
+              {user.full_name || user.username || 'Unknown'}
+              {club.owner === user._id ? ' 👑' : isAdmin(user._id) ? ' ⭐' : ''} —{' '}
               <Text style={{ fontWeight: 'bold' }}>{checkinCounts[user._id] || 0} Meetings Attended</Text>
             </Text>
           </View>
@@ -237,6 +275,10 @@ export default function EditClubScreen() {
         <Text style={styles.buttonText}>
           {loading ? "Saving..." : "Save Changes"}
         </Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={[styles.button, { backgroundColor: 'red' }]} onPress={handleDeleteClub}>
+        <Text style={styles.buttonText}>Delete Club</Text>
       </TouchableOpacity>
     </ScrollView>
   );

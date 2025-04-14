@@ -7,19 +7,29 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  ScrollView,
 } from 'react-native';
 import * as Location from 'expo-location';
 import useAuthRedirect from '../src/hooks/useAuthRedirect';
 import ProximityChecker from '../src/components/ProximityChecker';
 import { IP_ADDRESS } from '../src/components/config/globalvariables';
 
-type ClubData = {
+interface ClubData {
   _id: string;
   name: string;
   description: string;
   color: string;
   useLocationTracking: boolean;
-};
+}
+
+interface EventData {
+  _id: string;
+  title: string;
+  description: string;
+  date: string;
+  location: string;
+  clubId: string;
+}
 
 export default function ClubDetailScreen() {
   useAuthRedirect();
@@ -27,24 +37,38 @@ export default function ClubDetailScreen() {
   const router = useRouter();
 
   const [club, setClub] = useState<ClubData | null>(null);
+  const [events, setEvents] = useState<EventData[]>([]);
   const [loading, setLoading] = useState(true);
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
 
-  useEffect(() => {
-    const fetchClub = async () => {
-      try {
-        const res = await fetch(`http://${IP_ADDRESS}:5000/api/clubs/${id}`);
-        const data = await res.json();
-        setClub(data);
-      } catch (err) {
-        console.error("Error fetching club:", err);
-        Alert.alert("Error", "Could not load club data.");
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchClub = async () => {
+    try {
+      const res = await fetch(`http://${IP_ADDRESS}:5000/api/clubs/${id}`);
+      const data = await res.json();
+      setClub(data);
+    } catch (err) {
+      console.error("Error fetching club:", err);
+      Alert.alert("Error", "Could not load club data.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchClub();
+  const fetchEvents = async () => {
+    try {
+      const res = await fetch(`http://${IP_ADDRESS}:5000/api/events/club/${id}`);
+      const data = await res.json();
+      if (Array.isArray(data)) setEvents(data);
+    } catch (err) {
+      console.error("Error fetching events:", err);
+    }
+  };
+
+  useEffect(() => {
+    if (id) {
+      fetchClub();
+      fetchEvents();
+    }
   }, [id]);
 
   const handleLocationCheckIn = async () => {
@@ -76,7 +100,7 @@ export default function ClubDetailScreen() {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: club.color || '#A1B5D8' }]}>
+    <ScrollView contentContainerStyle={[styles.container, { backgroundColor: club.color || '#A1B5D8' }]}>
       <Text style={styles.title}>{club.name}</Text>
       <Text style={styles.subtitle}>{club.description}</Text>
 
@@ -89,7 +113,7 @@ export default function ClubDetailScreen() {
           </TouchableOpacity>
         )
       ) : (
-        <TouchableOpacity style={styles.button} onPress={() => Alert.alert("Checked In", "You checked in successfully!")}>
+        <TouchableOpacity style={styles.button} onPress={() => Alert.alert("Checked In", "You checked in successfully!")}> 
           <Text style={styles.buttonText}>Check In</Text>
         </TouchableOpacity>
       )}
@@ -100,15 +124,29 @@ export default function ClubDetailScreen() {
       >
         <Text style={styles.buttonText}>Edit Club Info</Text>
       </TouchableOpacity>
-    </View>
+
+      <View style={{ marginTop: 40, width: '100%' }}>
+        <Text style={styles.sectionTitle}>Upcoming Events</Text>
+        {events.length === 0 ? (
+          <Text style={styles.sectionText}>No events yet.</Text>
+        ) : (
+          events.map((event) => (
+            <View key={event._id} style={styles.eventCard}>
+              <Text style={styles.eventTitle}>{event.title}</Text>
+              <Text style={styles.eventDesc}>{event.description}</Text>
+              <Text style={styles.eventDate}>{event.date}</Text>
+            </View>
+          ))
+        )}
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     padding: 30,
-    justifyContent: 'center',
     alignItems: 'center',
   },
   title: {
@@ -134,5 +172,39 @@ const styles = StyleSheet.create({
     color: '#4c87df',
     fontWeight: '600',
     fontSize: 16,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 12,
+    alignSelf: 'flex-start',
+  },
+  sectionText: {
+    fontSize: 16,
+    color: '#fff',
+    alignSelf: 'flex-start',
+  },
+  eventCard: {
+    backgroundColor: '#fff',
+    padding: 14,
+    borderRadius: 10,
+    marginBottom: 16,
+    width: '100%',
+  },
+  eventTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 6,
+  },
+  eventDesc: {
+    fontSize: 14,
+    marginBottom: 4,
+    color: '#444',
+  },
+  eventDate: {
+    fontSize: 13,
+    fontStyle: 'italic',
+    color: '#666',
   },
 });
