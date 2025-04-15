@@ -13,6 +13,8 @@ import * as Location from 'expo-location';
 import useAuthRedirect from '../src/hooks/useAuthRedirect';
 import ProximityChecker from '../src/components/ProximityChecker';
 import { IP_ADDRESS } from '../src/components/config/globalvariables';
+import { useFocusEffect } from '@react-navigation/native';
+
 
 interface ClubData {
   _id: string;
@@ -20,6 +22,7 @@ interface ClubData {
   description: string;
   color: string;
   useLocationTracking: boolean;
+  activeEventId?: string;
 }
 
 interface EventData {
@@ -40,6 +43,9 @@ export default function ClubDetailScreen() {
   const [events, setEvents] = useState<EventData[]>([]);
   const [loading, setLoading] = useState(true);
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
+  const [checkedIn, setCheckedIn] = useState(false);
+  const [checkInSummary, setCheckInSummary] = useState<Record<string, number>>({});
+
 
   const fetchClub = async () => {
     try {
@@ -54,6 +60,23 @@ export default function ClubDetailScreen() {
     }
   };
 
+  const fetchCheckInSummary = async () => {
+    try {
+      const res = await fetch(`http://${IP_ADDRESS}:5000/api/checkin/summary/${id}`);
+      const data = await res.json();
+      if (res.ok && Array.isArray(data)) {
+        const counts: Record<string, number> = {};
+        data.forEach(entry => {
+          counts[entry.userId] = entry.total;
+        });
+        setCheckInSummary(counts);
+      }
+    } catch (err) {
+      console.error("❌ Failed to fetch check-in summary:", err);
+    }
+  };
+  
+
   const fetchEvents = async () => {
     try {
       const res = await fetch(`http://${IP_ADDRESS}:5000/api/events/club/${id}`);
@@ -64,12 +87,66 @@ export default function ClubDetailScreen() {
     }
   };
 
-  useEffect(() => {
-    if (id) {
-      fetchClub();
+  useFocusEffect(
+    React.useCallback(() => {
       fetchEvents();
+      fetchClub();
+    }, [id])
+  );
+
+
+  const handleCheckIn = async () => {
+    setLoading(true);
+  
+    try {
+      if (!club?.activeEventId) {
+        Alert.alert("No Active Event", "There is no event currently being tracked.");
+        return;
+      }
+  
+      let coords = null;
+  
+      // Only request location if club requires it
+      if (club.useLocationTracking) {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert("Permission Required", "Location permission is required for this club.");
+          return;
+        }
+  
+        const loc = await Location.getCurrentPositionAsync({});
+        coords = loc.coords;
+      }
+  
+      const res = await fetch(`http://${IP_ADDRESS}:5000/api/checkin/${club.activeEventId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: global.authUser?._id,
+          lat: coords?.latitude,  // undefined if not needed
+          lon: coords?.longitude
+        }),
+      });
+  
+      const data = await res.json();
+  
+      if (res.ok) {
+        setCheckedIn(true);
+        await fetchCheckInSummary(); // update stats if available
+        Alert.alert("✅ Check-In Successful", data.message);
+      } else {
+        Alert.alert("❌ Check-In Failed", data.error || "Could not check in.");
+      }
+  
+    } catch (err) {
+      console.error("Check-in error:", err);
+      Alert.alert("Error", "Could not perform check-in.");
+    } finally {
+      setLoading(false);
     }
-  }, [id]);
+  };
+  
+
 
   const handleLocationCheckIn = async () => {
     setLoading(true);
@@ -79,17 +156,43 @@ export default function ClubDetailScreen() {
       setLoading(false);
       return;
     }
-
+  
     try {
       const loc = await Location.getCurrentPositionAsync({});
       setLocation(loc);
+  
+      if (!club?.activeEventId) {
+        Alert.alert("No Active Event", "There is no event currently being tracked.");
+        return;
+      }
+  
+      const res = await fetch(`http://${IP_ADDRESS}:5000/api/checkin/${club.activeEventId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: global.authUser!._id,
+          lat: loc.coords.latitude,
+          lon: loc.coords.longitude
+        })
+      });
+  
+      const data = await res.json();
+      if (res.ok) {
+        setCheckedIn(true);
+        Alert.alert("✅ Check-In Successful", data.message);
+        await fetchClub();
+        await fetchCheckInSummary();
+  
+      } else {
+        Alert.alert("❌ Check-In Failed", data.error || "Unable to check in.");
+      }
     } catch (err) {
-      Alert.alert("Error", "Could not get your location.");
+      Alert.alert("Error", "Could not check in.");
       console.error(err);
     } finally {
       setLoading(false);
     }
-  };
+  };  
 
   if (loading || !club) {
     return (
@@ -104,7 +207,15 @@ export default function ClubDetailScreen() {
       <Text style={styles.title}>{club.name}</Text>
       <Text style={styles.subtitle}>{club.description}</Text>
 
-      {club.useLocationTracking ? (
+      {checkedIn && (
+        <View style={styles.banner}>
+          <Text style={styles.bannerText}>✅ You’ve checked in for the active event!</Text>
+        </View>
+      )}
+
+
+    {club.activeEventId ? (
+      club.useLocationTracking ? (
         location ? (
           <ProximityChecker anchor={location.coords} />
         ) : (
@@ -113,10 +224,34 @@ export default function ClubDetailScreen() {
           </TouchableOpacity>
         )
       ) : (
-        <TouchableOpacity style={styles.button} onPress={() => Alert.alert("Checked In", "You checked in successfully!")}> 
+        <TouchableOpacity
+          style={styles.button}
+          onPress={async () => {
+            try {
+              const res = await fetch(`http://${IP_ADDRESS}:5000/api/checkin/${club.activeEventId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: global.authUser?._id })
+              });
+              const data = await res.json();
+              if (res.ok) {
+                Alert.alert("✅ Check-In Successful", data.message);
+              } else {
+                Alert.alert("❌ Check-In Failed", data.error || "Unable to check in.");
+              }
+            } catch (err) {
+              Alert.alert("Error", "Could not check in.");
+              console.error(err);
+            }
+          }}
+        >
           <Text style={styles.buttonText}>Check In</Text>
         </TouchableOpacity>
-      )}
+      )
+    ) : (
+      <Text style={{ marginTop: 20, color: 'white' }}>No active event right now.</Text>
+    )}
+
 
       <TouchableOpacity
         style={[styles.button, { marginTop: 30, backgroundColor: '#666' }]}
@@ -207,4 +342,18 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     color: '#666',
   },
+  banner: {
+    backgroundColor: '#d4edda',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 16,
+    width: '100%',
+    alignItems: 'center',
+  },
+  bannerText: {
+    color: '#155724',
+    fontWeight: '600',
+  },
+  
+
 });

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, Switch, StyleSheet, TouchableOpacity, Alert, ActivityIndicator, ScrollView } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { IP_ADDRESS } from '../config/globalvariables';
-
+import { useFocusEffect } from '@react-navigation/native';
 
 type User = {
   _id: string;
@@ -22,6 +22,7 @@ type Club = {
   pending: User[];
   members: User[];
   owner: string;
+  activeEventId?: string | { _id: string } | null;
 };
 
 export default function EditClubScreen() {
@@ -31,12 +32,29 @@ export default function EditClubScreen() {
   const [club, setClub] = useState<Club | null>(null);
   const [checkinCounts, setCheckinCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(false);
+  const [events, setEvents] = useState<any[]>([]);
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const [isEventActive, setIsEventActive] = useState(false);
+  const [checkInSummary, setCheckInSummary] = useState<Record<string, number>>({});
 
   const fetchClub = async () => {
     try {
       const response = await fetch(`http://${IP_ADDRESS}:5000/api/clubs/${id}`);
       const data = await response.json();
       setClub(data);
+
+      const active = data.activeEventId;
+      if (active && typeof active === 'object' && active._id) {
+        setSelectedEventId(active._id);
+        setIsEventActive(true);
+      } else if (typeof active === 'string') {
+        setSelectedEventId(active);
+        setIsEventActive(true);
+      } else {
+        setSelectedEventId(null);
+        setIsEventActive(false);
+      }
+
     } catch (err) {
       console.error("Failed to fetch club:", err);
       Alert.alert("Error", "Could not load club info.");
@@ -69,8 +87,53 @@ export default function EditClubScreen() {
     if (id) {
       fetchClub();
       fetchCheckinStats();
+      fetchEvents();
     }
   }, [id]);
+
+  const fetchCheckInSummary = async () => {
+    try {
+      const res = await fetch(`http://${IP_ADDRESS}:5000/api/checkin/summary/${id}`);
+      const data = await res.json();
+      if (res.ok && Array.isArray(data)) {
+        const counts: Record<string, number> = {};
+        data.forEach(user => {
+          counts[user.userId] = user.total;
+        });
+        setCheckInSummary(counts);
+      }
+    } catch (err) {
+      console.error("❌ Failed to fetch summary:", err);
+    }
+  };
+  
+  useFocusEffect(
+    React.useCallback(() => {
+      if (id) {
+        fetchClub();
+        fetchCheckinStats();
+        fetchEvents();
+        fetchCheckInSummary(); // optional: refresh attendance
+      }
+    }, [id])
+  );
+  
+
+  const fetchEvents = async () => {
+    try {
+      const res = await fetch(`http://${IP_ADDRESS}:5000/api/events/club/${id}`);
+      const data = await res.json();
+      if (res.ok) {
+        setEvents(data);
+      } else {
+        console.error("Failed to fetch events:", data.error);
+      }
+    } catch (err) {
+      console.error("Event fetch error:", err);
+    }
+  };
+  
+
 
   const handleUpdateClub = async () => {
     setLoading(true);
@@ -84,15 +147,16 @@ export default function EditClubScreen() {
             description: club?.description,
             color: club?.color,
             useLocationTracking: club?.useLocationTracking,
-            isPublic: club?.isPublic
+            isPublic: club?.isPublic,
+            activeEventId: club?.activeEventId || null, 
           }
-        }),
+        }),        
       });
 
       const data = await response.json();
       if (response.ok) {
         Alert.alert("Success", "Club updated successfully!");
-        router.replace(`/(tabs)/homepage`);
+        router.replace(`/${id}`);
       } else {
         Alert.alert("Error", data.error || "Update failed.");
       }
@@ -189,14 +253,14 @@ export default function EditClubScreen() {
   return (
     <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
       <Text style={styles.heading}>Edit Club</Text>
-
+  
       <Text style={styles.label}>Name</Text>
       <TextInput
         style={styles.input}
         value={club.name}
         onChangeText={(text) => setClub({ ...club, name: text })}
       />
-
+  
       <Text style={styles.label}>Description</Text>
       <TextInput
         style={[styles.input, styles.descriptionBox]}
@@ -204,14 +268,14 @@ export default function EditClubScreen() {
         value={club.description}
         onChangeText={(text) => setClub({ ...club, description: text })}
       />
-
+  
       <Text style={styles.label}>Color</Text>
       <TextInput
         style={styles.input}
         value={club.color}
         onChangeText={(text) => setClub({ ...club, color: text })}
       />
-
+  
       <View style={styles.row}>
         <Text style={styles.label}>Location Tracking</Text>
         <Switch
@@ -219,7 +283,7 @@ export default function EditClubScreen() {
           onValueChange={(value) => setClub({ ...club, useLocationTracking: value })}
         />
       </View>
-
+  
       <View style={styles.row}>
         <Text style={styles.label}>Public Club</Text>
         <Switch
@@ -227,7 +291,14 @@ export default function EditClubScreen() {
           onValueChange={(value) => setClub({ ...club, isPublic: value })}
         />
       </View>
-
+  
+      <TouchableOpacity
+        style={[styles.button, { backgroundColor: '#888', marginTop: 10 }]}
+        onPress={() => router.push(`/create-event?id=${club._id}`)}
+      >
+        <Text style={styles.buttonText}>Create New Event</Text>
+      </TouchableOpacity>
+  
       <View style={{ marginBottom: 24 }}>
         <Text style={styles.label}>Join Code</Text>
         <Text style={styles.joinCode}>{club.joinCode}</Text>
@@ -238,7 +309,7 @@ export default function EditClubScreen() {
           <Text style={styles.buttonText}>Regenerate Join Code</Text>
         </TouchableOpacity>
       </View>
-
+  
       {club.pending?.length > 0 && (
         <View style={{ marginTop: 20 }}>
           <Text style={styles.label}>Pending Members</Text>
@@ -257,26 +328,90 @@ export default function EditClubScreen() {
           ))}
         </View>
       )}
-
+  
       <View style={{ marginTop: 30 }}>
         <Text style={styles.label}>Approved Members</Text>
         {club.members.map((user) => (
           <View key={user._id} style={styles.userRow}>
             <Text style={styles.userName}>
               {user.full_name || user.username || 'Unknown'}
-              {club.owner === user._id ? ' 👑' : isAdmin(user._id) ? ' ⭐' : ''} —{' '}
-              <Text style={{ fontWeight: 'bold' }}>{checkinCounts[user._id] || 0} Meetings Attended</Text>
+              {club.owner === user._id ? ' 👑' : isAdmin(user._id) ? ' ⭐' : ''} —{" "}
+              <Text style={{ fontWeight: "bold" }}>
+                {checkInSummary[user._id] || 0} Meetings Attended
+              </Text>
             </Text>
           </View>
         ))}
       </View>
-
+  
+      <View style={{ marginTop: 30 }}>
+        <Text style={styles.label}>Select Event to Track Attendance</Text>
+        <View style={styles.input}>
+          {events.length === 0 ? (
+            <Text>No events found</Text>
+          ) : (
+            events.map((event) => (
+              <TouchableOpacity
+                key={event._id}
+                onPress={() => setSelectedEventId(event._id)}
+                style={{
+                  paddingVertical: 6,
+                  backgroundColor: selectedEventId === event._id ? '#cde' : 'transparent',
+                }}
+              >
+                <Text>{event.title} — {event.date}</Text>
+              </TouchableOpacity>
+            ))
+          )}
+        </View>
+  
+        {selectedEventId && (
+          <TouchableOpacity
+            style={[
+              styles.button,
+              { backgroundColor: isEventActive ? 'red' : 'green', marginTop: 10 },
+            ]}
+            onPress={async () => {
+              try {
+                const response = await fetch(`http://${IP_ADDRESS}:5000/api/clubs/${id}/active-event`, {
+                  method: 'PATCH',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ eventId: isEventActive ? null : selectedEventId }),
+                });
+                if (response.ok) {
+                  const result = await response.json();
+                  const newActiveEvent = isEventActive ? null : selectedEventId;
+                  setClub(prev => prev ? { ...prev, activeEventId: newActiveEvent } : prev);
+                  setIsEventActive(!isEventActive);
+                  Alert.alert(
+                    isEventActive ? "Attendance Ended" : "Event Started",
+                    club?.useLocationTracking
+                      ? "Location tracking is active."
+                      : "Location tracking not required."
+                  );
+                } else {
+                  const error = await response.json();
+                  Alert.alert("Error", error?.message || "Could not update active event.");
+                }
+              } catch (err) {
+                console.error("Failed to toggle event tracking:", err);
+                Alert.alert("Error", "Could not update active event.");
+              }
+            }}
+          >
+            <Text style={styles.buttonText}>
+              {isEventActive ? "End Event" : "Start Event"}
+            </Text>
+          </TouchableOpacity>
+        )}
+      </View>
+  
       <TouchableOpacity style={styles.button} onPress={handleUpdateClub} disabled={loading}>
         <Text style={styles.buttonText}>
           {loading ? "Saving..." : "Save Changes"}
         </Text>
       </TouchableOpacity>
-
+  
       <TouchableOpacity style={[styles.button, { backgroundColor: 'red' }]} onPress={handleDeleteClub}>
         <Text style={styles.buttonText}>Delete Club</Text>
       </TouchableOpacity>

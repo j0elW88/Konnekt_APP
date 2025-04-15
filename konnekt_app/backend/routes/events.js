@@ -4,18 +4,41 @@ const User = require("../models/User");  // for checking if user exists before a
 
 const router = express.Router();
 
-// CREATE EVENT
-router.post("/create", async (req, res) => {
+//Retrieve all events
+router.get('/club/:clubId', async (req, res) => {
   try {
-    const { title, description, date, location, clubId } = req.body;
-    const newEvent = new Event({ title, description, date, location, clubId });
+    const events = await Event.find({ clubId: req.params.clubId });
+    res.json(events);
+  } catch (err) {
+    console.error('Error fetching events:', err);
+    res.status(500).json({ error: 'Server error fetching events' });
+  }
+});
+
+module.exports = router;
+
+// CREATE EVENT
+router.post('/create', async (req, res) => {
+  try {
+    const { title, description, date, location, clubId, isPrivate } = req.body;
+
+    const newEvent = new Event({
+      title,
+      description,
+      date,
+      location,
+      clubId,
+      isPrivate,
+    });
+
     await newEvent.save();
     res.status(201).json(newEvent);
   } catch (err) {
-    console.error("Create Event Error:", err);
-    res.status(500).json({ msg: "Server error" });
+    console.error("Error creating event:", err);
+    res.status(500).json({ error: 'Server error creating event' });
   }
 });
+
 
 // RSVP TO EVENT
 router.post("/rsvp/:eventId", async (req, res) => {
@@ -62,6 +85,32 @@ router.get('/club/:clubId', async (req, res) => {
     res.status(500).json({ msg: 'Server error' });
   }
 });
+
+//Archive Event 
+router.patch('/:eventId/archive', async (req, res) => {
+  try {
+    const event = await Event.findByIdAndUpdate(req.params.eventId, { status: 'archived' }, { new: true });
+    if (!event) return res.status(404).json({ error: 'Event not found' });
+    res.json({ message: 'Event archived', event });
+  } catch (err) {
+    console.error("Archive failed:", err);
+    res.status(500).json({ error: 'Failed to archive event' });
+  }
+});
+
+//Delete Event
+router.delete('/:eventId', async (req, res) => {
+  try {
+    await CheckIn.deleteMany({ event: req.params.eventId });
+    await Event.findByIdAndDelete(req.params.eventId);
+    res.json({ message: 'Event and related check-ins deleted' });
+  } catch (err) {
+    console.error("Delete failed:", err);
+    res.status(500).json({ error: 'Failed to delete event' });
+  }
+});
+
+
 
 
 module.exports = router;

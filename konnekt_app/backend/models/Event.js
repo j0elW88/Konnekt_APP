@@ -5,8 +5,10 @@ const EventSchema = new mongoose.Schema({
   description: { type: String },
   date: { type: String, required: true }, // Format: YYYY-MM-DD
   location: { type: String },
-  clubId: { type: String, required: true }, // From app/club/[id].tsx
+  clubId: { type: String, required: true },
   rsvps: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  isPrivate: { type: Boolean, default: false }, // <-- Add this line
 });
+
 
 module.exports = mongoose.model("Event", EventSchema);

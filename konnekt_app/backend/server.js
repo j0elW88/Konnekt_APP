@@ -20,6 +20,13 @@ const IP = process.env.IP_ADDRESS || "localhost";
 const checkinRoutes = require("./routes/checkin");
 app.use("/api/checkin", checkinRoutes);
 
+const eventsRoute = require('./routes/events');
+app.use('/api/events', eventsRoute);
+
+
 app.listen(PORT, () => {
   console.log(`🚀 Server running at http://${IP}:${PORT}`);
+
+
 });
+

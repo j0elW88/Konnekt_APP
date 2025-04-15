@@ -7,6 +7,6 @@ const CheckInSchema = new mongoose.Schema({
   timestamp: { type: Date, default: Date.now },
 });
 
-CheckInSchema.index({ user: 1, event: 1 }, { unique: true }); // prevent duplicate check-ins
+CheckInSchema.index({ user: 1, event: 1 }, { unique: true });
 
 module.exports = mongoose.model("CheckIn", CheckInSchema);

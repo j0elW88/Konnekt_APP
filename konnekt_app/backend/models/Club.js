@@ -26,6 +26,12 @@ const ClubSchema = new mongoose.Schema({
     lat: { type: Number, default: null },
     lon: { type: Number, default: null },
   },
+  activeEventId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Event',
+    default: null
+  },
+  
 });
 
 module.exports = mongoose.model("Club", ClubSchema);

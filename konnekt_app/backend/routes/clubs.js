@@ -444,4 +444,53 @@ router.patch('/:id/kick/:userId', async (req, res) => {
 
 
 
+
+// Set active event for attendance tracking
+router.patch('/:id/active-event', async (req, res) => {
+  try {
+    const { eventId } = req.body;
+
+    const updated = await Club.findByIdAndUpdate(
+      req.params.id,
+      { activeEventId: eventId || null },
+      { new: true }
+    );
+
+    console.log("✅ Updated club activeEventId to:", updated.activeEventId)
+
+    if (!updated) {
+      return res.status(404).json({ error: 'Club not found' });
+    }
+
+    res.json({ message: 'Active event updated', activeEventId: updated.activeEventId });
+  } catch (err) {
+    console.error("❌ Failed to set active event:", err);
+    res.status(500).json({ error: 'Failed to update active event' });
+  }
+});
+
+//get single club by id
+router.get('/:id', async (req, res) => {
+  try {
+    const club = await Club.findById(req.params.id)
+      .populate('owner admins members pending', 'username full_name')
+      .populate('activeEventId', 'title date'); 
+
+    console.log("📦 Club data being sent includes activeEventId:", club.activeEventId);
+
+    if (!club) {
+      return res.status(404).json({ error: 'Club not found' });
+    }
+
+    res.json(club);
+  } catch (err) {
+    console.error('Error fetching club:', err);
+    res.status(500).json({ error: 'Failed to fetch club data' });
+  }
+});
+
+
+
+
+
 module.exports = router;
