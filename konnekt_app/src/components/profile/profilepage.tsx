@@ -4,8 +4,6 @@ import { useRouter } from "expo-router";
 import { IP_ADDRESS } from "../config/globalvariables";
 
 
-
-
 export default function ProfileHomeScreen() {
   const router = useRouter();
   const [authUser, setAuthUser] = useState(global.authUser || null);
@@ -39,7 +37,7 @@ export default function ProfileHomeScreen() {
                   readOnly 
                   placeholder={global.authUser?.full_name}
                   placeholderTextColor="#aaa" />
-          <TouchableOpacity style={styles.button} onPress={() => router.replace("/editprofileScreen")}>
+          <TouchableOpacity style={styles.button} onPress={() => router.push('/edit-profile')}>
                   <Text style={styles.buttonText}>Edit Profile</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.back_button} onPress={handleSignOut} >

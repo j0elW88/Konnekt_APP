@@ -74,4 +74,36 @@ router.post("/signin", async (req, res) => {
   }
 });
 
+// EDIT PROFILE ROUTE
+router.post("/editprofile", async (req, res) => {
+  const { email, username, full_name } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ msg: "User not found" });
+    }
+
+    user.username = username;
+    user.full_name = full_name;
+
+    await user.save();
+
+    res.json({
+      msg: "Profile updated successfully",
+      user: {
+        _id: user._id,
+        email: user.email,
+        username: user.username,
+        full_name: user.full_name,
+      },
+    });
+  } catch (err) {
+    console.error("Edit profile error:", err.message);
+    res.status(500).json({ msg: "Server error" });
+  }
+});
+
+
 module.exports = router;
