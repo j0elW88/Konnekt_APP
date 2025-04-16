@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { IP_ADDRESS } from '../config/globalvariables';
 import {
   View,
   Text,
@@ -21,52 +22,79 @@ interface Club {
   color?: string;
 }
 
-interface Post {
+export type Post = {
   _id: string;
   clubId: string;
   clubName: string;
   content: string;
   imageUrl?: string;
   createdAt: string;
-  likes: number;
-}
+  likes: string[];
+};
 
 interface HomepageProps {
   clubs: Club[];
   posts?: Post[];
+  events?: any[];
   onLeaveClub: (clubId: string, clubName: string) => void;
 }
 
-export default function Homepage({ clubs, posts = [], onLeaveClub }: HomepageProps) {
+
+
+export default function Homepage({
+  clubs,
+  posts = [],
+  events = [],
+  onLeaveClub,
+}: HomepageProps) {
+
   const router = useRouter();
   const [modalVisible, setModalVisible] = useState(false);
   const [likedPosts, setLikedPosts] = useState<string[]>([]);
   const [selectedClub, setSelectedClub] = useState<string>("all");
   const [postData, setPostData] = useState<Post[]>(posts);
+  const [showEvents, setShowEvents] = useState(true);
+  
+
+  const toggleView = () => {
+    setShowEvents(prev => !prev);
+  };
 
   useEffect(() => {
     setPostData(posts);
   }, [posts]);
 
-  const handleLike = (postId: string) => {
+  const handleLike = async (postId: string) => {
+    const userId = global.authUser?._id;
     const hasLiked = likedPosts.includes(postId);
 
-    const updatedPosts = postData.map((post) => {
-      if (post._id === postId) {
-        return {
-          ...post,
-          likes: hasLiked ? post.likes - 1 : post.likes + 1,
-        };
+    try {
+      const res = await fetch(`http://${IP_ADDRESS}:5000/api/posts/${postId}/like`, {
+        method: hasLiked ? 'DELETE' : 'PATCH',
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId })
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to update like.");
       }
-      return post;
-    });
 
-    setPostData(updatedPosts);
+      const updatedPost = await res.json();
 
-    if (hasLiked) {
-      setLikedPosts(likedPosts.filter((id) => id !== postId));
-    } else {
-      setLikedPosts([...likedPosts, postId]);
+      setPostData(prev =>
+        prev.map(post =>
+          post._id === postId ? { ...post, likes: updatedPost.likes } : post
+        )
+      );
+
+      if (hasLiked) {
+        setLikedPosts(prev => prev.filter(id => id !== postId));
+      } else {
+        setLikedPosts(prev => [...prev, postId]);
+      }
+
+    } catch (err) {
+      console.error("Like error:", err);
     }
   };
 
@@ -81,14 +109,12 @@ export default function Homepage({ clubs, posts = [], onLeaveClub }: HomepagePro
   return (
     <ScrollView style={styles.scroll}>
       <View style={styles.container}>
-        {/* Dropdown icon */}
         <TouchableOpacity style={styles.menuIcon} onPress={() => setModalVisible(true)}>
           <Ionicons name="ellipsis-vertical" size={24} color="#333" />
         </TouchableOpacity>
 
         <Text style={styles.heading}>Your Clubs</Text>
 
-        {/* Club buttons */}
         {clubs.map((club) => (
           <TouchableOpacity
             key={club._id}
@@ -113,7 +139,6 @@ export default function Homepage({ clubs, posts = [], onLeaveClub }: HomepagePro
           <Text style={styles.createButtonText}>+ Create New Club</Text>
         </TouchableOpacity>
 
-        {/* Modal for leaving a club */}
         <Modal
           visible={modalVisible}
           transparent
@@ -145,9 +170,39 @@ export default function Homepage({ clubs, posts = [], onLeaveClub }: HomepagePro
           </View>
         </Modal>
 
-        {/* Posts feed */}
+        {/* Toggle Buttons */}
+        <View style={styles.toggleBar}>
+          <TouchableOpacity
+            style={[styles.toggleButton, showEvents && styles.toggleActive]}
+            onPress={() => setShowEvents(true)}
+          >
+            <Text style={styles.toggleText}>Events</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.toggleButton, !showEvents && styles.toggleActive]}
+            onPress={() => setShowEvents(false)}
+          >
+            <Text style={styles.toggleText}>Posts</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Feed Section */} 
         <View style={styles.feedWrapper}>
-          {filteredPosts.length === 0 ? (
+          {showEvents ? (
+            events.length === 0 ? (
+              <Text style={styles.emptyText}>No upcoming events.</Text>
+            ) : (
+              events.map((event) => (
+                <View key={event._id} style={styles.postContainer}>
+                  <Text style={styles.clubName}>{event.title}</Text>
+                  <Text style={styles.content}>{event.description}</Text>
+                  <Text style={styles.postDate}>
+                    {new Date(event.date).toLocaleDateString()}
+                  </Text>
+                </View>
+              ))
+            )
+          ) : filteredPosts.length === 0 ? (
             <Text style={styles.emptyText}>No posts available.</Text>
           ) : (
             filteredPosts.map((item) => {
@@ -160,12 +215,12 @@ export default function Homepage({ clubs, posts = [], onLeaveClub }: HomepagePro
                   <Text style={styles.content}>{item.content}</Text>
                   <Text style={styles.postDate}>{formattedDate}</Text>
                   <Image
-                    source={{ uri: item.imageUrl || "https://via.placeholder.com/400x400?text=No+Image" }}
+                    source={{ uri: item.imageUrl || "https://placehold.co/400x400?text=No+Image" }}
                     style={styles.postImage}
                   />
                   <TouchableOpacity onPress={() => handleLike(item._id)} style={styles.likeButton}>
                     <Text style={{ color: hasLiked ? "red" : "black" }}>
-                      {hasLiked ? "❤️" : "🤍"} {item.likes} Likes
+                      {hasLiked ? "❤️" : "🤍"} {item.likes.length} Likes
                     </Text>
                   </TouchableOpacity>
                 </View>
@@ -265,16 +320,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   postContainer: {
-    marginBottom: 24,
-    padding: 16,
+    marginBottom: 16,
+    padding: 12,
     backgroundColor: "#fff",
     borderRadius: 8,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-    justifyContent: "space-between",
+    shadowRadius: 3,
+    elevation: 1,
+    minHeight: 200,
+    width: "90%",
+    alignSelf: "center",
   },
   clubName: {
     fontWeight: "bold",
@@ -306,5 +363,25 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontSize: 16,
     color: "#888",
+  },
+  toggleBar: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginTop: 20,
+    marginBottom: 10,
+  },
+  toggleButton: {
+    padding: 10,
+    marginHorizontal: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "#ccc",
+  },
+  toggleActive: {
+    backgroundColor: "#4c87df",
+  },
+  toggleText: {
+    color: "#fff",
+    fontWeight: "bold",
   },
 });

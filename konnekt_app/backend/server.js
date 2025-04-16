@@ -23,6 +23,9 @@ app.use("/api/checkin", checkinRoutes);
 const eventsRoute = require('./routes/events');
 app.use('/api/events', eventsRoute);
 
+const postRoutes = require('./routes/posts');
+app.use('/api/posts', postRoutes);
+
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running at http://${IP}:${PORT}`);

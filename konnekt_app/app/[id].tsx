@@ -327,6 +327,18 @@ useFocusEffect(
         <Text style={styles.buttonText}>Edit Club Info</Text>
       </TouchableOpacity>
 
+
+      <TouchableOpacity
+        style={[styles.button, { marginTop: 12, backgroundColor: '#ffffff' }]}
+        onPress={() =>
+          router.push(`/create-post?clubId=${club._id}&clubName=${encodeURIComponent(club.name)}`)
+        }
+      >
+        <Text style={styles.buttonText}>Create Post</Text>
+      </TouchableOpacity>
+
+
+
       <View style={{ marginTop: 40, width: '100%' }}>
         <Text style={styles.sectionTitle}>Upcoming Events</Text>
         {upcomingEvents.length === 0 ? (

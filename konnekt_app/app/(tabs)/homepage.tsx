@@ -19,8 +19,9 @@ type Post = {
   content: string;
   imageUrl?: string;
   createdAt: string;
-  likes: number;
+  likes: string[]; 
 };
+
 
 export default function HomePageScreen() {
   useAuthRedirect();
@@ -28,6 +29,8 @@ export default function HomePageScreen() {
   const router = useRouter();
   const [clubs, setClubs] = useState<Club[]>([]);
   const [posts, setPosts] = useState<Post[]>([]);
+  const [events, setEvents] = useState<any[]>([]); 
+
 
   const fetchUserClubs = async () => {
     try {
@@ -46,11 +49,36 @@ export default function HomePageScreen() {
     }
   };
 
-  const fetchPosts = async () => {
+  const fetchEvents = async () => {
     try {
-      const res = await fetch(`http://${IP_ADDRESS}:5000/api/posts/feed/${global.authUser?._id}`);
+      const res = await fetch(`http://${IP_ADDRESS}:5000/api/events/user/${global.authUser?._id}`);
       const data = await res.json();
+  
+      if (Array.isArray(data)) {
+        setEvents(data);
+      } else {
+        console.error("Expected array of events, got:", data);
+        setEvents([]);
+      }
+    } catch (err) {
+      console.error("Failed to fetch events", err);
+      setEvents([]);
+    }
+  };
+  
 
+  const fetchPosts = async () => {
+    const userId = global.authUser?._id;
+  
+    if (!userId) {
+      console.warn("❗ User ID not yet available, skipping fetchPosts.");
+      return;
+    }
+  
+    try {
+      const res = await fetch(`http://${IP_ADDRESS}:5000/api/posts/feed/${userId}`);
+      const data = await res.json();
+  
       if (Array.isArray(data)) {
         setPosts(data);
       } else {
@@ -62,6 +90,7 @@ export default function HomePageScreen() {
       setPosts([]);
     }
   };
+  
 
   const handleLeaveClub = async (clubId: string, clubName: string) => {
     const userId = global.authUser?._id;
@@ -143,8 +172,11 @@ export default function HomePageScreen() {
     if (isFocused) {
       fetchUserClubs();
       fetchPosts();
+      fetchEvents(); 
     }
-  }, [isFocused]);
+  }, [isFocused]);  
+  
+  
 
-  return <Homepage clubs={clubs} posts={posts} onLeaveClub={handleLeaveClub} />;
+  return <Homepage clubs={clubs} posts={posts} events={events} onLeaveClub={handleLeaveClub} />;
 }
