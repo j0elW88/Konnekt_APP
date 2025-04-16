@@ -5,10 +5,11 @@ import AuthDetails from "../src/components/auth/AuthDetails";
 import { useEffect } from "react";
 import { useRouter } from 'expo-router';
 
-const router = useRouter();
 
 
 export default function HomeScreen() {
+
+  const router = useRouter();
   
   useEffect(() => {
     if(global.authUser) {

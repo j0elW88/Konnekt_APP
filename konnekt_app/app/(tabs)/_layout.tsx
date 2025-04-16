@@ -48,6 +48,13 @@ export default function TabLayout() {
         }}
       />
 
+        name="calendarpage"
+        options={{
+          title: 'Calendar',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+        }}
+      />
+
     </Tabs>
   );
 }

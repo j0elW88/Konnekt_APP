@@ -1,0 +1,25 @@
+{
+  "name": "konnekt_app",
+  "version": "1.0.0",
+  "description": "For: Involved students\r Who:  Clubs and organization that need to track attendance and or plan events\r Our: App is an accessibility tool for students and event planners\r That: helps students/people connect and participate with their organization and allows clubs to track attendance, and be more involved with their members\r Unlike: Iclicker,  that is mostly only usable in educational/professional settings, and is not new user friendly, or google forms that are hard to standardize and uncomfortable.\r Our product: caters towards new users, provides insight into future events, more comfortable looking interaction slides, pleasing user interface",
+  "main": "main: node_modules/expo/AppEntry.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/j0elW88/Konnekt_APP.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/j0elW88/Konnekt_APP/issues"
+  },
+  "homepage": "https://github.com/j0elW88/Konnekt_APP#readme",
+  "dependencies": {
+    "expo": "^52.0.41"
+  },
+  "devDependencies": {
+    "@types/expo": "^32.0.13",
+    "t
