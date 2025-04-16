@@ -23,9 +23,15 @@ const ClubSchema = new mongoose.Schema({
     default: () => Math.random().toString(36).substr(2, 6).toUpperCase(),
   },
   checkInCoords: {
-    lat: { type: Number, default: null },
-    lon: { type: Number, default: null },
+    lat: { type: Number, default: null, required: false },
+    lon: { type: Number, default: null, required: false },
   },
+  checkInRadius: {
+    type: Number,
+    default: 0.01, // about 1km depending on latitude
+    required: false,
+  },
+  
   activeEventId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Event',

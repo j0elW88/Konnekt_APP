@@ -68,7 +68,7 @@ router.get("/:clubId/:userId", async (req, res) => {
 
 // Check-in a user to an event
 router.post("/:eventId", async (req, res) => {
-  const { eventId: event } = req.params;
+  const { eventId } = req.params;
   const { userId: user, lat, lon } = req.body;
 
   try {
@@ -111,7 +111,6 @@ router.post("/:eventId", async (req, res) => {
     return res.json({ message: "Checked in successfully!" });
 
   } catch (err) {
-    // Handle duplicate error gracefully
     if (err.code === 11000) {
       return res.status(400).json({ error: "Already checked in (duplicate)" });
     }
@@ -120,6 +119,7 @@ router.post("/:eventId", async (req, res) => {
     return res.status(500).json({ error: "Check-in server error" });
   }
 });
+
 
 
 

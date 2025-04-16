@@ -281,43 +281,43 @@ useFocusEffect(
       )}
 
 
-    {club.activeEventId ? (
-      club.useLocationTracking ? (
-        location ? (
-          <ProximityChecker anchor={location.coords} />
+      {club.activeEventId && upcomingEvents.some(e => e._id === club.activeEventId) ? (
+        club.useLocationTracking ? (
+          location ? (
+            <ProximityChecker anchor={location.coords} />
+          ) : (
+            <TouchableOpacity style={styles.button} onPress={handleLocationCheckIn}>
+              <Text style={styles.buttonText}>Check In with Location</Text>
+            </TouchableOpacity>
+          )
         ) : (
-          <TouchableOpacity style={styles.button} onPress={handleLocationCheckIn}>
-            <Text style={styles.buttonText}>Check In with Location</Text>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={async () => {
+              try {
+                const res = await fetch(`http://${IP_ADDRESS}:5000/api/checkin/${club.activeEventId}`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ userId: global.authUser?._id })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                  Alert.alert("✅ Check-In Successful", data.message);
+                } else {
+                  Alert.alert("❌ Check-In Failed", data.error || "Unable to check in.");
+                }
+              } catch (err) {
+                Alert.alert("Error", "Could not check in.");
+                console.error(err);
+              }
+            }}
+          >
+            <Text style={styles.buttonText}>Check In</Text>
           </TouchableOpacity>
         )
       ) : (
-        <TouchableOpacity
-          style={styles.button}
-          onPress={async () => {
-            try {
-              const res = await fetch(`http://${IP_ADDRESS}:5000/api/checkin/${club.activeEventId}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId: global.authUser?._id })
-              });
-              const data = await res.json();
-              if (res.ok) {
-                Alert.alert("✅ Check-In Successful", data.message);
-              } else {
-                Alert.alert("❌ Check-In Failed", data.error || "Unable to check in.");
-              }
-            } catch (err) {
-              Alert.alert("Error", "Could not check in.");
-              console.error(err);
-            }
-          }}
-        >
-          <Text style={styles.buttonText}>Check In</Text>
-        </TouchableOpacity>
-      )
-    ) : (
-      <Text style={{ marginTop: 20, color: 'white' }}>No active event right now.</Text>
-    )}
+        <Text style={{ marginTop: 20, color: 'white' }}>No active event right now.</Text>
+      )}
 
 
       <TouchableOpacity

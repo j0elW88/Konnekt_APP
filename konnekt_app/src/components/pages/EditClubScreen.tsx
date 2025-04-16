@@ -123,8 +123,9 @@ export default function EditClubScreen() {
     try {
       const res = await fetch(`http://${IP_ADDRESS}:5000/api/events/club/${id}`);
       const data = await res.json();
-      if (res.ok) {
-        setEvents(data);
+      if (res.ok && Array.isArray(data)) {
+        const upcoming = data.filter((event) => !event.isArchived);
+        setEvents(upcoming); // ✅ only non-archived events
       } else {
         console.error("Failed to fetch events:", data.error);
       }
@@ -132,6 +133,7 @@ export default function EditClubScreen() {
       console.error("Event fetch error:", err);
     }
   };
+  
   
 
 

@@ -11,7 +11,10 @@ const EventSchema = new mongoose.Schema({
   isArchived: {
     type: Boolean,
     default: false
-  }
+  },
+  archivedAt: { type: Date },
+  isManuallyDeleted: { type: Boolean, default: false }
+
   
 });
 

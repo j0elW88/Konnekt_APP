@@ -1,10 +1,10 @@
 const express = require("express");
 const Event = require("../models/Event");
-const User = require("../models/User");  // for checking if user exists before allowing rsvp
+const User = require("../models/User");
 
 const router = express.Router();
 
-//Retrieve all events
+// Retrieve all events for a club
 router.get('/club/:clubId', async (req, res) => {
   try {
     const events = await Event.find({ clubId: req.params.clubId });
@@ -15,7 +15,7 @@ router.get('/club/:clubId', async (req, res) => {
   }
 });
 
-// CREATE EVENT
+// Create Event
 router.post('/create', async (req, res) => {
   try {
     const { title, description, date, location, clubId, isPrivate } = req.body;
@@ -37,8 +37,7 @@ router.post('/create', async (req, res) => {
   }
 });
 
-
-// RSVP TO EVENT
+// RSVP to Event
 router.post("/rsvp/:eventId", async (req, res) => {
   try {
     const { eventId } = req.params;
@@ -47,7 +46,6 @@ router.post("/rsvp/:eventId", async (req, res) => {
     const event = await Event.findById(eventId);
     if (!event) return res.status(404).json({ msg: "Event not found" });
 
-    // Prevent duplicate RSVP
     if (event.rsvps.includes(userId)) {
       return res.status(400).json({ msg: "Already RSVPed" });
     }
@@ -61,7 +59,7 @@ router.post("/rsvp/:eventId", async (req, res) => {
   }
 });
 
-// GET RSVP'D EVENTS FOR USER
+// Get RSVP'd events for a user
 router.get("/rsvped/:userId", async (req, res) => {
   try {
     const { userId } = req.params;
@@ -73,13 +71,21 @@ router.get("/rsvped/:userId", async (req, res) => {
   }
 });
 
-//Archive Event 
+// Archive/unarchive event and set `archivedAt`
 router.patch('/:id/archive', async (req, res) => {
   try {
     const { isArchived } = req.body;
+
+    const updateFields = { isArchived };
+    if (isArchived) {
+      updateFields.archivedAt = new Date(); // add this field only if archiving
+    } else {
+      updateFields.archivedAt = null;
+    }
+
     const updated = await Event.findByIdAndUpdate(
       req.params.id,
-      { isArchived },
+      updateFields,
       { new: true }
     );
     res.json(updated);
@@ -89,21 +95,23 @@ router.patch('/:id/archive', async (req, res) => {
   }
 });
 
-//Deletion of Event
+// Mark event as manually deleted, then remove it
 router.delete('/:id', async (req, res) => {
   try {
-    const deleted = await Event.findByIdAndDelete(req.params.id);
-    if (!deleted) {
+    const updated = await Event.findByIdAndUpdate(req.params.id, {
+      isManuallyDeleted: true
+    });
+
+    if (!updated) {
       return res.status(404).json({ error: "Event not found" });
     }
+
+    await Event.findByIdAndDelete(req.params.id);
     res.json({ message: "Event deleted successfully" });
   } catch (err) {
     console.error("Error deleting event:", err);
     res.status(500).json({ error: "Server error deleting event" });
   }
 });
-
-
-
 
 module.exports = router;
