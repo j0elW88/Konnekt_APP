@@ -12,11 +12,22 @@ type Club = {
   color?: string;
 };
 
+type Post = {
+  _id: string;
+  clubId: string;
+  clubName: string;
+  content: string;
+  imageUrl?: string;
+  createdAt: string;
+  likes: number;
+};
+
 export default function HomePageScreen() {
   useAuthRedirect();
   const isFocused = useIsFocused();
   const router = useRouter();
   const [clubs, setClubs] = useState<Club[]>([]);
+  const [posts, setPosts] = useState<Post[]>([]);
 
   const fetchUserClubs = async () => {
     try {
@@ -35,6 +46,23 @@ export default function HomePageScreen() {
     }
   };
 
+  const fetchPosts = async () => {
+    try {
+      const res = await fetch(`http://${IP_ADDRESS}:5000/api/posts/feed/${global.authUser?._id}`);
+      const data = await res.json();
+
+      if (Array.isArray(data)) {
+        setPosts(data);
+      } else {
+        console.error("Expected array of posts, got:", data);
+        setPosts([]);
+      }
+    } catch (err) {
+      console.error("Failed to fetch posts", err);
+      setPosts([]);
+    }
+  };
+
   const handleLeaveClub = async (clubId: string, clubName: string) => {
     const userId = global.authUser?._id;
     console.log("📛 handleLeaveClub called for:", clubName, "userId:", userId);
@@ -45,7 +73,6 @@ export default function HomePageScreen() {
       return;
     }
 
-    // 👉 Fetch club details to check ownership and member count
     try {
       const clubRes = await fetch(`http://${IP_ADDRESS}:5000/api/clubs/${clubId}`);
       const club = await clubRes.json();
@@ -113,8 +140,11 @@ export default function HomePageScreen() {
   };
 
   useEffect(() => {
-    if (isFocused) fetchUserClubs();
+    if (isFocused) {
+      fetchUserClubs();
+      fetchPosts();
+    }
   }, [isFocused]);
 
-  return <Homepage clubs={clubs} onLeaveClub={handleLeaveClub} />;
+  return <Homepage clubs={clubs} posts={posts} onLeaveClub={handleLeaveClub} />;
 }
