@@ -94,23 +94,6 @@ export default function CreateEventScreen() {
         placeholder="MM/DD/YYYY"
       />
 
-      <TouchableOpacity
-        onPress={() => setShowPicker(true)}
-        style={[styles.button, { marginBottom: 10 }]}
-      >
-        <Text style={styles.buttonText}>Pick with Calendar</Text>
-      </TouchableOpacity>
-
-      {showPicker && (
-        <DateTimePicker
-          value={date}
-          mode="date"
-          display="default"
-          onChange={handleDateChange}
-        />
-      )}
-
-
 
       <Text style={styles.label}>Location</Text>
       <TextInput style={styles.input} value={location} onChangeText={setLocation} />
