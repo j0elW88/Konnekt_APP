@@ -3,6 +3,9 @@ import { View, Text, TextInput, Switch, StyleSheet, TouchableOpacity, Alert, Act
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { IP_ADDRESS } from '../config/globalvariables';
 import { useFocusEffect } from '@react-navigation/native';
+import Location from 'expo-location';
+import Slider from '@react-native-community/slider';
+
 
 type User = {
   _id: string;
@@ -23,7 +26,13 @@ type Club = {
   members: User[];
   owner: string;
   activeEventId?: string | { _id: string } | null;
+  checkInCoords?: {
+    lat: number;
+    lon: number;
+  };
+  checkInRadius?: number;
 };
+
 
 export default function EditClubScreen() {
   const { id } = useLocalSearchParams();
@@ -151,6 +160,8 @@ export default function EditClubScreen() {
             useLocationTracking: club?.useLocationTracking,
             isPublic: club?.isPublic,
             activeEventId: club?.activeEventId || null, 
+            checkInCoords: club?.checkInCoords || null,
+            checkInRadius: club?.checkInRadius || 0.01,            
           }
         }),        
       });
@@ -286,6 +297,75 @@ export default function EditClubScreen() {
           onValueChange={(value) => setClub({ ...club, useLocationTracking: value })}
         />
       </View>
+
+      {club.useLocationTracking && (
+  <View style={{ marginBottom: 24 }}>
+    <Text style={styles.label}>Check-In Location</Text>
+
+    {club.checkInCoords?.lat != null && club.checkInCoords?.lon != null ? (
+      <Text>
+        Latitude: {club.checkInCoords.lat.toFixed(5)} | Longitude: {club.checkInCoords.lon.toFixed(5)}
+      </Text>
+    ) : (
+      <Text>No location set</Text>
+    )}
+
+    <TouchableOpacity
+      style={[styles.button, { backgroundColor: '#999', marginTop: 10 }]}
+      onPress={async () => {
+        try {
+          const { status } = await Location.requestForegroundPermissionsAsync();
+          if (status !== 'granted') {
+            Alert.alert("Permission Denied", "Location access is required.");
+            return;
+          }
+
+          const loc = await Location.getCurrentPositionAsync({});
+          setClub(prev => prev && {
+            ...prev,
+            checkInCoords: {
+              lat: loc.coords.latitude,
+              lon: loc.coords.longitude
+            }
+          });
+        } catch (err) {
+          console.error("Set location error:", err);
+          Alert.alert("Error", "Failed to set location.");
+        }
+      }}
+    >
+      <Text style={styles.buttonText}>Set Current Location</Text>
+    </TouchableOpacity>
+
+    <Text style={[styles.label, { marginTop: 16 }]}>Check-In Radius (in feet)</Text>
+      <View style={{ marginHorizontal: 20 }}>
+      <Slider
+          minimumValue={10}
+          maximumValue={5280}
+          step={10}
+          value={(club.checkInRadius ?? (175 / 364000)) * 364000}
+          onValueChange={(feet) => {
+            const degrees = feet / 364000;
+            setClub(prev => prev && {
+              ...prev,
+              checkInRadius: degrees
+            });
+          }}
+          minimumTrackTintColor="#4c87df"
+          maximumTrackTintColor="#ccc"
+          thumbTintColor="#4c87df"
+          style={{ height: 30, width: '100%' }} // ← added width here
+      />
+
+      </View>
+
+      <Text style={{ textAlign: 'center', marginTop: 8, color: '#555', fontSize: 14 }}>
+        {Math.round((club.checkInRadius || 0.01) * 364000)} ft
+      </Text>
+
+      </View>
+      )}
+
   
       <View style={styles.row}>
         <Text style={styles.label}>Public Club</Text>
