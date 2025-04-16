@@ -380,20 +380,6 @@ router.patch('/:id/join-code/reset', async (req, res) => {
   }
 });
 
-//get single club by ID
-router.get('/:id', async (req, res) => {
-  try {
-    const club = await Club.findById(req.params.id)
-      .populate('owner admins members', 'username full_name');
-    if (!club) {
-      return res.status(404).json({ error: 'Club not found' });
-    }
-    res.json(club);
-  } catch (err) {
-    console.error('Error fetching club:', err);
-    res.status(500).json({ error: 'Failed to fetch club data' });
-  }
-});
 
 //set check-in coordinates (admins and owners only)
 router.patch('/:id/location', async (req, res) => {

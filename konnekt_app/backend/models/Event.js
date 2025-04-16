@@ -7,7 +7,12 @@ const EventSchema = new mongoose.Schema({
   location: { type: String },
   clubId: { type: String, required: true },
   rsvps: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
-  isPrivate: { type: Boolean, default: false }, // <-- Add this line
+  isPrivate: { type: Boolean, default: false }, 
+  isArchived: {
+    type: Boolean,
+    default: false
+  }
+  
 });
 
 

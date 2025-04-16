@@ -156,7 +156,8 @@ export default function EditClubScreen() {
       const data = await response.json();
       if (response.ok) {
         Alert.alert("Success", "Club updated successfully!");
-        router.replace(`/${id}`);
+        //router.replace(`/${id}`);
+        router.back() // maybe a better solution than above to prevent being stuck having to push back 12 times
       } else {
         Alert.alert("Error", data.error || "Update failed.");
       }

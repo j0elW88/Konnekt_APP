@@ -13,6 +13,9 @@ const mongoose = require("mongoose");
 router.get('/summary/:clubId', async (req, res) => {
   try {
     const clubId = req.params.clubId;
+    if (!mongoose.Types.ObjectId.isValid(clubId)) {
+      return res.status(400).json({ error: "Invalid club ID format" });
+    }
 
     const summary = await CheckIn.aggregate([
       { $match: { club: new mongoose.Types.ObjectId(clubId) } },
@@ -32,7 +35,6 @@ router.get('/summary/:clubId', async (req, res) => {
     res.status(500).json({ error: "Summary aggregation failed" });
   }
 });
-
 
 
 
@@ -56,7 +58,7 @@ router.get('/club/:clubId', async (req, res) => {
 router.get("/:clubId/:userId", async (req, res) => {
   const { clubId, userId } = req.params;
   try {
-    const records = await CheckIn.find({ club: clubId, user: userId }).populate("eventId", "title date");
+    const records = await CheckIn.find({ club: clubId, user: userId }).populate("event", "title date");
     res.json(records);
   } catch (err) {
     console.error("❌ Error fetching check-ins:", err);
@@ -66,7 +68,7 @@ router.get("/:clubId/:userId", async (req, res) => {
 
 // Check-in a user to an event
 router.post("/:eventId", async (req, res) => {
-  const { eventId } = req.params;
+  const { eventId: event } = req.params;
   const { userId: user, lat, lon } = req.body;
 
   try {

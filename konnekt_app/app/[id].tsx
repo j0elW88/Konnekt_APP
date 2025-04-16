@@ -44,7 +44,11 @@ export default function ClubDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
   const [checkedIn, setCheckedIn] = useState(false);
-  const [checkInSummary, setCheckInSummary] = useState<Record<string, number>>({});
+  const [checkInSummary, setCheckInSummary] = useState<Record<string, number>>({}); //only here for one call and I couldn't figure out another way to do it so for now usiing this redundantly
+ 
+  const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
+  const [archivedEvents, setArchivedEvents] = useState<any[]>([]);
+  const [showArchived, setShowArchived] = useState(false);
 
 
   const fetchClub = async () => {
@@ -76,26 +80,73 @@ export default function ClubDetailScreen() {
     }
   };
   
-
   const fetchEvents = async () => {
     try {
       const res = await fetch(`http://${IP_ADDRESS}:5000/api/events/club/${id}`);
       const data = await res.json();
-      if (Array.isArray(data)) setEvents(data);
+      if (Array.isArray(data)) {
+        const upcoming = data.filter(event => !event.isArchived);
+        const archived = data.filter(event => event.isArchived);
+        setUpcomingEvents(upcoming);    
+        setArchivedEvents(archived);     
+      }
     } catch (err) {
       console.error("Error fetching events:", err);
     }
   };
+  
 
-  useFocusEffect(
-    React.useCallback(() => {
-      fetchEvents();
-      fetchClub();
-    }, [id])
-  );
+  const handleArchiveEvent = async (eventId: string, isArchived: boolean) => {
+    try {
+      const res = await fetch(`http://${IP_ADDRESS}:5000/api/events/${eventId}/archive`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isArchived }),
+      });
+  
+      if (res.ok) {
+        await fetchEvents(); // refresh UI
+        Alert.alert("Event Updated", isArchived ? "Event archived." : "Event reopened.");
+      } else {
+        Alert.alert("Error", "Could not update archive status.");
+      }
+    } catch (err) {
+      console.error("Archive event failed:", err);
+      Alert.alert("Error", "Server error archiving event.");
+    }
+  };
 
+  const confirmDelete = async (eventId: string) => {
+    console.log("🔁 Attempting fetch to", `http://${IP_ADDRESS}:5000/api/events/${eventId}`);
+  
+    try {
+      const res = await fetch(`http://${IP_ADDRESS}:5000/api/events/${eventId}`, {
+        method: 'DELETE',
+      });
+  
+      let data = {};
+      try {
+        data = await res.json();
+      } catch {
+        console.warn("⚠️ No JSON returned");
+      }
+  
+      console.log("🧾 Delete response status:", res.status);
+      console.log("🧾 Delete response body:", data);
+  
+      if (res.ok) {
+        console.log("✅ Event deleted");
+        await fetchEvents();
+      } else {
+        console.error("❌ Error deleting event:", data);
+      }
+    } catch (err) {
+      console.error("🔥 Delete error:", err);
+    }
+  };
+  
 
-  const handleCheckIn = async () => {
+/*const handleCheckIn = async () => {
     setLoading(true);
   
     try {
@@ -145,7 +196,7 @@ export default function ClubDetailScreen() {
       setLoading(false);
     }
   };
-  
+  */
 
 
   const handleLocationCheckIn = async () => {
@@ -193,6 +244,22 @@ export default function ClubDetailScreen() {
       setLoading(false);
     }
   };  
+
+//Load initial
+useEffect(() => {
+  fetchClub();
+  fetchEvents();
+  fetchCheckInSummary();
+}, [id]);
+
+// Re-fetch for return to screen
+useFocusEffect(
+  React.useCallback(() => {
+    fetchClub();
+    fetchEvents();
+    fetchCheckInSummary();
+  }, [id])
+);
 
   if (loading || !club) {
     return (
@@ -254,7 +321,7 @@ export default function ClubDetailScreen() {
 
 
       <TouchableOpacity
-        style={[styles.button, { marginTop: 30, backgroundColor: '#666' }]}
+        style={[styles.button, { marginTop: 30, backgroundColor: '#ffb6c1' }]}
         onPress={() => router.push(`/edit-club?id=${club._id}`)}
       >
         <Text style={styles.buttonText}>Edit Club Info</Text>
@@ -262,18 +329,74 @@ export default function ClubDetailScreen() {
 
       <View style={{ marginTop: 40, width: '100%' }}>
         <Text style={styles.sectionTitle}>Upcoming Events</Text>
-        {events.length === 0 ? (
+        {upcomingEvents.length === 0 ? (
           <Text style={styles.sectionText}>No events yet.</Text>
         ) : (
-          events.map((event) => (
+          upcomingEvents.map((event) => (
             <View key={event._id} style={styles.eventCard}>
               <Text style={styles.eventTitle}>{event.title}</Text>
               <Text style={styles.eventDesc}>{event.description}</Text>
               <Text style={styles.eventDate}>{event.date}</Text>
+          
+              <View style={{ flexDirection: 'row', gap: 10, marginTop: 10 }}>
+                <TouchableOpacity
+                  onPress={() => handleArchiveEvent(event._id, true)}
+                  style={[styles.button, { backgroundColor: '#d3d3d3' }]}
+                >
+                  <Text style={styles.buttonText}>Archive</Text>
+                </TouchableOpacity>
+          
+                <TouchableOpacity
+                  onPress={() => confirmDelete(event._id)}
+                  style={[styles.button, { backgroundColor: 'red' }]}
+                >
+                  <Text style={styles.buttonText}>Delete</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           ))
+          
+        )}
+
+        {/* Archived Dropdown */}
+        <TouchableOpacity onPress={() => setShowArchived(!showArchived)} style={{ marginTop: 20 }}>
+          <Text style={{ fontWeight: 'bold', color: '#fff' }}>
+            {showArchived ? 'Hide Archived Events ▲' : 'Show Archived Events ▼'}
+          </Text>
+        </TouchableOpacity>
+
+        {/*  Archived Events */}
+        {showArchived && archivedEvents.length > 0 && (
+          <View style={{ marginTop: 12 }}>
+            <Text style={[styles.sectionTitle, { fontSize: 18 }]}>Archived Events</Text>
+            {archivedEvents.map((event) => (
+                <View key={event._id} style={[styles.eventCard, { backgroundColor: '#e8e8e8' }]}>
+                  <Text style={[styles.eventTitle, { color: '#555' }]}>{event.title}</Text>
+                  <Text style={[styles.eventDesc, { color: '#777' }]}>{event.description}</Text>
+                  <Text style={styles.eventDate}>{event.date}</Text>
+
+                  <View style={{ flexDirection: 'row', gap: 10, marginTop: 10 }}>
+                    <TouchableOpacity
+                      onPress={() => handleArchiveEvent(event._id, false)}
+                      style={[styles.button, { backgroundColor: '#4c87df' }]}
+                    >
+                      <Text style={styles.buttonText}>Reopen</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      onPress={() => confirmDelete(event._id)}
+                      style={[styles.button, { backgroundColor: 'red' }]}
+                    >
+                      <Text style={styles.buttonText}>Delete</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ))
+              }
+          </View>
         )}
       </View>
+
     </ScrollView>
   );
 }
@@ -297,14 +420,14 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   button: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#d3d3d3',
     paddingVertical: 12,
     paddingHorizontal: 25,
     borderRadius: 8,
     marginTop: 20,
   },
   buttonText: {
-    color: '#4c87df',
+    color: '#00000',
     fontWeight: '600',
     fontSize: 16,
   },
