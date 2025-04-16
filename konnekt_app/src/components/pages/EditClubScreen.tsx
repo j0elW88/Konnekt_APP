@@ -377,7 +377,7 @@ export default function EditClubScreen() {
   
       <TouchableOpacity
         style={[styles.button, { backgroundColor: '#888', marginTop: 10 }]}
-        onPress={() => router.push(`/create-event?id=${club._id}`)}
+        onPress={() => router.push(`../create-event?id=${club._id}`)}
       >
         <Text style={styles.buttonText}>Create New Event</Text>
       </TouchableOpacity>

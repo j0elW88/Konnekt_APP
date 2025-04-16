@@ -322,7 +322,7 @@ useFocusEffect(
 
       <TouchableOpacity
         style={[styles.button, { marginTop: 30, backgroundColor: '#ffb6c1' }]}
-        onPress={() => router.push(`/edit-club?id=${club._id}`)}
+        onPress={() => router.push(`../edit-club?id=${club._id}`)}
       >
         <Text style={styles.buttonText}>Edit Club Info</Text>
       </TouchableOpacity>
