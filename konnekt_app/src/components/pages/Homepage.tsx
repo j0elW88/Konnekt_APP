@@ -35,30 +35,15 @@ export type Post = {
 interface HomepageProps {
   clubs: Club[];
   posts?: Post[];
-  events?: any[];
   onLeaveClub: (clubId: string, clubName: string) => void;
 }
 
-
-
-export default function Homepage({
-  clubs,
-  posts = [],
-  events = [],
-  onLeaveClub,
-}: HomepageProps) {
-
+export default function Homepage({ clubs, posts = [], onLeaveClub }: HomepageProps) {
   const router = useRouter();
   const [modalVisible, setModalVisible] = useState(false);
   const [likedPosts, setLikedPosts] = useState<string[]>([]);
   const [selectedClub, setSelectedClub] = useState<string>("all");
   const [postData, setPostData] = useState<Post[]>(posts);
-  const [showEvents, setShowEvents] = useState(true);
-  
-
-  const toggleView = () => {
-    setShowEvents(prev => !prev);
-  };
 
   useEffect(() => {
     setPostData(posts);
@@ -170,39 +155,8 @@ export default function Homepage({
           </View>
         </Modal>
 
-        {/* Toggle Buttons */}
-        <View style={styles.toggleBar}>
-          <TouchableOpacity
-            style={[styles.toggleButton, showEvents && styles.toggleActive]}
-            onPress={() => setShowEvents(true)}
-          >
-            <Text style={styles.toggleText}>Events</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.toggleButton, !showEvents && styles.toggleActive]}
-            onPress={() => setShowEvents(false)}
-          >
-            <Text style={styles.toggleText}>Posts</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Feed Section */} 
         <View style={styles.feedWrapper}>
-          {showEvents ? (
-            events.length === 0 ? (
-              <Text style={styles.emptyText}>No upcoming events.</Text>
-            ) : (
-              events.map((event) => (
-                <View key={event._id} style={styles.postContainer}>
-                  <Text style={styles.clubName}>{event.title}</Text>
-                  <Text style={styles.content}>{event.description}</Text>
-                  <Text style={styles.postDate}>
-                    {new Date(event.date).toLocaleDateString()}
-                  </Text>
-                </View>
-              ))
-            )
-          ) : filteredPosts.length === 0 ? (
+          {filteredPosts.length === 0 ? (
             <Text style={styles.emptyText}>No posts available.</Text>
           ) : (
             filteredPosts.map((item) => {
@@ -234,20 +188,9 @@ export default function Homepage({
 }
 
 const styles = StyleSheet.create({
-  scroll: {
-    flex: 1,
-    backgroundColor: "#f4f6fc",
-  },
-  container: {
-    padding: 20,
-    paddingTop: 80,
-  },
-  heading: {
-    fontSize: 22,
-    fontWeight: "bold",
-    marginBottom: 20,
-    textAlign: "center",
-  },
+  scroll: { flex: 1, backgroundColor: "#f4f6fc" },
+  container: { padding: 20, paddingTop: 80 },
+  heading: { fontSize: 22, fontWeight: "bold", marginBottom: 20, textAlign: "center" },
   clubButton: {
     padding: 15,
     marginBottom: 12,
@@ -255,11 +198,7 @@ const styles = StyleSheet.create({
     borderColor: "#ccc",
     borderWidth: 1,
   },
-  clubText: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: "#fff",
-  },
+  clubText: { fontSize: 16, fontWeight: "500", color: "#fff" },
   createButton: {
     backgroundColor: "#4c87df",
     padding: 15,
@@ -267,43 +206,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 20,
   },
-  createButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  menuIcon: {
-    position: "absolute",
-    top: 40,
-    right: 20,
-    zIndex: 20,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "#000000aa",
-    justifyContent: "center",
-    padding: 20,
-  },
-  modalContainer: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 20,
-    maxHeight: "80%",
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 12,
-    textAlign: "center",
-  },
-  leaveOption: {
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#ddd",
-  },
-  leaveOptionText: {
-    fontSize: 16,
-  },
+  createButtonText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
+  menuIcon: { position: "absolute", top: 40, right: 20, zIndex: 20 },
+  modalOverlay: { flex: 1, backgroundColor: "#000000aa", justifyContent: "center", padding: 20 },
+  modalContainer: { backgroundColor: "#fff", borderRadius: 12, padding: 20, maxHeight: "80%" },
+  modalTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 12, textAlign: "center" },
+  leaveOption: { paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: "#ddd" },
+  leaveOptionText: { fontSize: 16 },
   cancelButton: {
     marginTop: 12,
     backgroundColor: "#aaa",
@@ -311,14 +220,8 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: "center",
   },
-  cancelText: {
-    color: "white",
-    fontWeight: "bold",
-  },
-  feedWrapper: {
-    marginTop: 30,
-    alignItems: "center",
-  },
+  cancelText: { color: "white", fontWeight: "bold" },
+  feedWrapper: { marginTop: 30, alignItems: "center" },
   postContainer: {
     marginBottom: 16,
     padding: 12,
@@ -333,20 +236,9 @@ const styles = StyleSheet.create({
     width: "90%",
     alignSelf: "center",
   },
-  clubName: {
-    fontWeight: "bold",
-    marginBottom: 4,
-    fontSize: 18,
-  },
-  content: {
-    marginBottom: 4,
-    fontSize: 16,
-  },
-  postDate: {
-    color: "#888",
-    fontSize: 12,
-    marginBottom: 8,
-  },
+  clubName: { fontWeight: "bold", marginBottom: 4, fontSize: 18 },
+  content: { marginBottom: 4, fontSize: 16 },
+  postDate: { color: "#888", fontSize: 12, marginBottom: 8 },
   postImage: {
     width: "100%",
     aspectRatio: 1,
@@ -355,33 +247,6 @@ const styles = StyleSheet.create({
     resizeMode: "cover",
     flexShrink: 0,
   },
-  likeButton: {
-    paddingVertical: 4,
-  },
-  emptyText: {
-    marginTop: 20,
-    textAlign: "center",
-    fontSize: 16,
-    color: "#888",
-  },
-  toggleBar: {
-    flexDirection: "row",
-    justifyContent: "center",
-    marginTop: 20,
-    marginBottom: 10,
-  },
-  toggleButton: {
-    padding: 10,
-    marginHorizontal: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: "#ccc",
-  },
-  toggleActive: {
-    backgroundColor: "#4c87df",
-  },
-  toggleText: {
-    color: "#fff",
-    fontWeight: "bold",
-  },
+  likeButton: { paddingVertical: 4 },
+  emptyText: { marginTop: 20, textAlign: "center", fontSize: 16, color: "#888" },
 });

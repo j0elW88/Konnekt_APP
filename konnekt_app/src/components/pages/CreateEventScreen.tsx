@@ -4,6 +4,13 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { IP_ADDRESS } from '../config/globalvariables';
 
+
+function isValidDateString(dateStr: string): boolean {
+  const parsed = Date.parse(dateStr);
+  return !isNaN(parsed);
+}
+
+
 export default function CreateEventScreen() {
   const { id: clubId } = useLocalSearchParams();
   const router = useRouter();
@@ -25,7 +32,14 @@ export default function CreateEventScreen() {
     if (!title.trim()) {
       return Alert.alert('Title is required');
     }
-
+  
+    // ✅ Validate the date format
+    const isValidDate = !isNaN(new Date(date).getTime());
+    if (!isValidDate) {
+      Alert.alert("Invalid Date", "Please enter a valid date (MM/DD/YYYY).");
+      return;
+    }
+  
     try {
       const response = await fetch(`http://${IP_ADDRESS}:5000/api/events/create`, {
         method: 'POST',
@@ -33,12 +47,12 @@ export default function CreateEventScreen() {
         body: JSON.stringify({
           title,
           description,
-          date: date.toISOString().split('T')[0],
           location,
+          date: new Date(date).toISOString().split('T')[0], // 👈 Safe conversion here
           clubId,
         }),
       });
-
+  
       const data = await response.json();
       if (response.ok) {
         Alert.alert('Event created successfully');
@@ -50,7 +64,7 @@ export default function CreateEventScreen() {
       console.error('Create event error:', err);
       Alert.alert('Error', 'Failed to connect to server');
     }
-  };
+  };  
 
   return (
     <View style={styles.container}>
@@ -63,19 +77,44 @@ export default function CreateEventScreen() {
       <TextInput style={styles.input} value={description} onChangeText={setDescription} multiline />
 
       <Text style={styles.label}>Date</Text>
-      <TouchableOpacity onPress={() => setShowPicker(true)} style={styles.input}>
-        <Text>{date.toDateString()}</Text>
+      <Text style={styles.label}>Date (MM/DD/YYYY)</Text>
+      <TextInput
+        style={styles.input}
+        value={date.toLocaleDateString("en-US")}
+        onChangeText={(text) => {
+          const parts = text.split('/');
+          if (parts.length === 3) {
+            const [month, day, year] = parts.map(Number);
+            const newDate = new Date(year, month - 1, day);
+            if (!isNaN(newDate.getTime())) {
+              setDate(newDate);
+            }
+          }
+        }}
+        placeholder="MM/DD/YYYY"
+      />
+
+      <TouchableOpacity
+        onPress={() => setShowPicker(true)}
+        style={[styles.button, { marginBottom: 10 }]}
+      >
+        <Text style={styles.buttonText}>Pick with Calendar</Text>
       </TouchableOpacity>
+
       {showPicker && (
-        <DateTimePicker value={date} mode="date" display="default" onChange={handleDateChange} />
+        <DateTimePicker
+          value={date}
+          mode="date"
+          display="default"
+          onChange={handleDateChange}
+        />
       )}
+
+
 
       <Text style={styles.label}>Location</Text>
       <TextInput style={styles.input} value={location} onChangeText={setLocation} />
 
-      <TouchableOpacity style={styles.button} onPress={handleCreate}>
-        <Text style={styles.buttonText}>Create Event</Text>
-      </TouchableOpacity>
     </View>
   );
 }
