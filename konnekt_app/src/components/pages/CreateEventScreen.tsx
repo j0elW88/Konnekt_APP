@@ -1,5 +1,16 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, Platform } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  Alert,
+  StyleSheet,
+  Platform,
+  Keyboard,
+  KeyboardAvoidingView,
+  TouchableWithoutFeedback,
+} from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { IP_ADDRESS } from '../config/globalvariables';
@@ -67,40 +78,53 @@ export default function CreateEventScreen() {
   };  
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.heading}>Create Event</Text>
-
-      <Text style={styles.label}>Title</Text>
-      <TextInput style={styles.input} value={title} onChangeText={setTitle} />
-
-      <Text style={styles.label}>Description</Text>
-      <TextInput style={styles.input} value={description} onChangeText={setDescription} multiline />
-
-      <Text style={styles.label}>Date</Text>
-      <Text style={styles.label}>Date (MM/DD/YYYY)</Text>
-      <TextInput
-        style={styles.input}
-        value={date.toLocaleDateString("en-US")}
-        onChangeText={(text) => {
-          const parts = text.split('/');
-          if (parts.length === 3) {
-            const [month, day, year] = parts.map(Number);
-            const newDate = new Date(year, month - 1, day);
-            if (!isNaN(newDate.getTime())) {
-              setDate(newDate);
-            }
-          }
-        }}
-        placeholder="MM/DD/YYYY"
-      />
-
-
-      <Text style={styles.label}>Location</Text>
-      <TextInput style={styles.input} value={location} onChangeText={setLocation} />
-
-    </View>
-  );
-}
+    <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.heading}>Create Event</Text>
+    
+            <Text style={styles.label}>Title</Text>
+            <TextInput style={styles.input} value={title} onChangeText={setTitle} />
+    
+            <Text style={styles.label}>Description</Text>
+            <TextInput
+              style={styles.input}
+              value={description}
+              onChangeText={setDescription}
+              multiline
+            />
+    
+            <Text style={styles.label}>Date (MM/DD/YYYY)</Text>
+            <TextInput
+              style={styles.input}
+              value={date.toLocaleDateString("en-US")}
+              onChangeText={(text) => {
+                const parts = text.split('/');
+                if (parts.length === 3) {
+                  const [month, day, year] = parts.map(Number);
+                  const newDate = new Date(year, month - 1, day);
+                  if (!isNaN(newDate.getTime())) {
+                    setDate(newDate);
+                  }
+                }
+              }}
+              placeholder="MM/DD/YYYY"
+            />
+    
+            <Text style={styles.label}>Location</Text>
+            <TextInput style={styles.input} value={location} onChangeText={setLocation} />
+    
+            <TouchableOpacity style={styles.button} onPress={handleCreate}>
+              <Text style={styles.buttonText}>Create Event</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
+    );  
+  }
 
 const styles = StyleSheet.create({
   container: {
