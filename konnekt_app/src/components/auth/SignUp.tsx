@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, TextInput, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { View, TextInput, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
 import { useRouter } from 'expo-router';
 import { IP_ADDRESS } from "../config/globalvariables";
 
@@ -54,8 +54,10 @@ export default function SignUp() {
 
   return (
     <View style={styles.menu}>
-
-
+      <Image
+        source={require('../../../assets/images/knktMainLogo.png')}
+        style={styles.logo}
+        resizeMode="contain"/>
       <Text style={styles.label}>Username</Text>
       <TextInput
         style={styles.input}
@@ -150,6 +152,13 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
+  },
+  logo: {
+    width: 80, // Adjust size as needed
+    height: 80,
+    alignSelf: 'center',
+    borderRadius: 10,
+    marginBottom: 30,
   },
   label: {
     fontSize: 14,

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, Button, StyleSheet, TextInput, TouchableOpacity } from "react-native";
+import { View, Text, Button, StyleSheet, TextInput, TouchableOpacity, Image } from "react-native";
 import { useRouter } from "expo-router";
 import { IP_ADDRESS } from "../config/globalvariables";
 
@@ -17,8 +17,13 @@ export default function ProfileHomeScreen() {
 
   return (
     <View style={styles.container}>
-        <Text style={styles.title}>Profile</Text>
+      <View style={styles.menuWrap}>
         <View style={styles.menu}>
+          <Image
+            source={require('../../../assets/images/knktMainLogo.png')}
+            style={styles.logo}
+            resizeMode="contain"/>
+          <Text style={styles.title}>Profile</Text>
           <Text style={styles.label}>Email</Text>
                 <TextInput 
                   style={styles.input} 
@@ -45,6 +50,7 @@ export default function ProfileHomeScreen() {
           </TouchableOpacity>
         </View>
       </View>
+    </View>
   );
 }
 
@@ -53,10 +59,15 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
     paddingVertical: 10,
+    alignSelf: 'center',
+  },
+  menuWrap: {
+    width: '100%',
+    alignItems: 'center', // Centers the menu
   },
   menu: {
-    width: '200%',
-    maxWidth: 350,
+    width: 350,
+    maxWidth: '100%',
     backgroundColor: '#fff',
     padding: 20,
     borderRadius: 10,
@@ -64,6 +75,13 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
+},
+logo: {
+  width: 80, // Adjust size as needed
+  height: 80,
+  alignSelf: 'center',
+  borderRadius: 10,
+  marginBottom: 5,
 },
 container: {
   flex: 1,
@@ -77,14 +95,13 @@ label: {
   marginBottom: 5,
 },
 input: {
-  width: '100%',
   height: 40,
   borderWidth: 1,
-  borderColor: '#ddd',
+  borderColor: "#ddd",
   borderRadius: 5,
   paddingHorizontal: 10,
   marginBottom: 15,
-  backgroundColor: '#F9F9F9',
+  backgroundColor: "#F9F9F9",
 },
 button: {
   backgroundColor: '#4c87df', 

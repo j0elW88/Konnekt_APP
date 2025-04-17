@@ -5,8 +5,10 @@ import {
   StyleSheet,
   TouchableOpacity,
   FlatList,
-  Alert,
+  Alert, 
+  Platform,
 } from 'react-native';
+
 import { IP_ADDRESS } from '../../src/components/config/globalvariables';
 import useAuthRedirect from "../../src/hooks/useAuthRedirect"; //send back to index if signed out
 
@@ -136,6 +138,10 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 16,
     textAlign: 'center',
+    marginTop: Platform.select({
+            ios: 60,       // adjust this as needed
+            default: 0,    // for web/local host
+          }),
   },
   sectionTitle: {
     fontSize: 18,
