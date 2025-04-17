@@ -31,12 +31,8 @@ export default function RootLayout() {
       
       <Stack screenOptions={{ animation: 'slide_from_right', presentation: 'card' }}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="create-club"
-          options={{
-            headerTitle: '',
-          }}
-        />
+
+  
         <Stack.Screen
           name="join-club"
           options={{
@@ -76,6 +72,68 @@ export default function RootLayout() {
             headerBackTitle: 'back',
           }}
         />
+
+        <Stack.Screen
+          name="create-club"
+          options={{
+            headerTitle: '',
+            headerShown: true,
+            headerStyle: { backgroundColor: '#4c87df' },
+            headerTintColor: '#fff',
+            headerTitleStyle: { fontWeight: 'bold' },
+            headerBackTitle: 'back',
+          }}
+        />
+
+        <Stack.Screen
+          name="create-event"
+          options={{
+            headerTitle: '',
+            headerShown: true,
+            headerStyle: { backgroundColor: '#4c87df' },
+            headerTintColor: '#fff',
+            headerTitleStyle: { fontWeight: 'bold' },
+            headerBackTitle: 'back',
+          }}
+        />
+
+        <Stack.Screen
+          name="create-post"
+          options={{
+            headerTitle: '',
+            headerShown: true,
+            headerStyle: { backgroundColor: '#4c87df' },
+            headerTintColor: '#fff',
+            headerTitleStyle: { fontWeight: 'bold' },
+            headerBackTitle: 'back',
+          }}
+        />
+
+        <Stack.Screen
+          name="edit-club"
+          options={{
+            headerTitle: '',
+            headerShown: true,
+            headerStyle: { backgroundColor: '#4c87df' },
+            headerTintColor: '#fff',
+            headerTitleStyle: { fontWeight: 'bold' },
+            headerBackTitle: 'back',
+          }}
+        />
+
+        <Stack.Screen
+          name="edit-profile"
+          options={{
+            headerTitle: '',
+            headerShown: true,
+            headerStyle: { backgroundColor: '#4c87df' },
+            headerTintColor: '#fff',
+            headerTitleStyle: { fontWeight: 'bold' },
+            headerBackTitle: 'back',
+          }}
+        />
+    
+
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style="auto" />
