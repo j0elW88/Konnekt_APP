@@ -55,8 +55,8 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   menu: {
-    width: '200%',
-    maxWidth: 350,
+    width: '90%',
+    maxWidth: 400,
     backgroundColor: '#fff',
     padding: 20,
     borderRadius: 10,
@@ -64,7 +64,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
-},
+  },  
 container: {
   flex: 1,
   justifyContent: "center",
