@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { View, TextInput, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { View, TextInput, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
 import { useRouter } from 'expo-router';
-import { Image } from 'expo-image'
 import { IP_ADDRESS } from "../config/globalvariables";
 
 const API_URL = `http://${IP_ADDRESS}:5000/api/auth`;
@@ -42,6 +41,10 @@ export default function SignIn() {
 
   return (
     <View style={styles.menu}>
+      <Image
+        source={require('../../../assets/images/knktMainLogo.png')}
+        style={styles.logo}
+        resizeMode="contain"/>
       <Text style={styles.label}>Email or Username</Text>
       <TextInput 
         style={styles.input}
@@ -94,6 +97,13 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 4,
     marginBottom: 10,
+  },
+  logo: {
+    width: 80, // Adjust size as needed
+    height: 80,
+    alignSelf: 'center',
+    borderRadius: 10,
+    marginBottom: 40,
   },
   label: { fontSize: 14, color: '#555', marginBottom: 5 },
   input: {
