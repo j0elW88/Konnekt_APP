@@ -96,6 +96,30 @@ export default function ClubDetailScreen() {
   };
   
 
+  const handleRSVP = async (eventId: string) => {
+    try {
+      const res = await fetch(`http://${IP_ADDRESS}:5000/api/events/rsvp/${eventId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: global.authUser?._id,
+        }),
+      });
+  
+      const data = await res.json();
+  
+      if (res.ok) {
+        Alert.alert("✅ RSVP Successful", data.msg || "You have RSVP’d to this event.");
+        await fetchEvents(); // refresh event list in case RSVP count or state changes
+      } else {
+        Alert.alert("❌ RSVP Failed", data.msg || "Unable to RSVP.");
+      }
+    } catch (err) {
+      console.error("RSVP Error:", err);
+      Alert.alert("Error", "Could not RSVP to the event.");
+    }
+  };
+  
   const handleArchiveEvent = async (eventId: string, isArchived: boolean) => {
     try {
       const res = await fetch(`http://${IP_ADDRESS}:5000/api/events/${eventId}/archive`, {
@@ -363,6 +387,13 @@ useFocusEffect(
                   style={[styles.button, { backgroundColor: 'red' }]}
                 >
                   <Text style={styles.buttonText}>Delete</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={() => handleRSVP(event._id)}
+                  style={[styles.button, { backgroundColor: '#7CFC00' }]}
+                >
+                  <Text style={styles.buttonText}>RSVP</Text>
                 </TouchableOpacity>
               </View>
             </View>

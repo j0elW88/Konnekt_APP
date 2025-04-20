@@ -2,6 +2,8 @@ const express = require("express");
 const Event = require("../models/Event");
 const User = require("../models/User");
 
+const mongoose = require("mongoose");
+
 const router = express.Router();
 
 // Retrieve all events for a club
@@ -62,8 +64,10 @@ router.post("/rsvp/:eventId", async (req, res) => {
 // Get RSVP'd events for a user
 router.get("/rsvped/:userId", async (req, res) => {
   try {
-    const { userId } = req.params;
-    const events = await Event.find({ rsvps: userId });
+    const objectId = new mongoose.Types.ObjectId(req.params.userId);
+
+    const events = await Event.find({ rsvps: objectId });
+
     res.json(events);
   } catch (err) {
     console.error("Fetch RSVP'd Events Error:", err);
